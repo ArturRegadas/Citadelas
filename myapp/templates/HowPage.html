@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Como Funciona</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{  url_for('static', filename='styles/StyleAboutUs.css')  }}">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+    {% include "components/Header.html" %}
+
+    <main class="flex-fill">
+
+        <section class="hero-banner">
+            <div class="container">
+                <h1>Guia Passo a Passo dos Nossos Leilões</h1>
+                <p>Descubra como é fácil e seguro comprar e vender itens raros em nossa plataforma.</p>
+            </div>
+        </section>
+
+        <section class="process-section">
+            <div class="container" style="max-width: 1000px;">
+
+                <h2 style="font-size: 30px; color: var(--dark-grey-text); margin-bottom: 10px;">Para Compradores</h2>
+                <p style="font-size: 18px; color: var(--light-text); margin-bottom: 50px;">A jornada para o seu novo
+                    item exclusivo em 4 etapas simples.</p>
+
+                <div class="process-flow">
+
+                    <div class="step">
+                        <div class="step-icon-circle">
+                            <span class="step-number">1</span>
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <h3>Registo Rápido</h3>
+                        <p>Crie sua conta gratuita em poucos minutos. A verificação garante a segurança de toda a
+                            comunidade.</p>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-icon-circle">
+                            <span class="step-number">2</span>
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h3>Encontre seu Item</h3>
+                        <p>Explore nossas categorias, use filtros avançados e salve suas buscas favoritas para não
+                            perder nenhuma oportunidade.</p>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-icon-circle">
+                            <span class="step-number">3</span>
+                            <i class="fas fa-money-check-alt"></i>
+                        </div>
+                        <h3>Dê seu Lance</h3>
+                        <p>Participe em tempo real, basta escolher o valor e dar o lance</p>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-icon-circle">
+                            <span class="step-number">4</span>
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        <h3>Receba e Desfrute</h3>
+                        <p>Após vencer, finalize o pagamento seguro. O item é enviado e chega até você com garantia de
+                            autenticidade.</p>
+                    </div>
+                </div>
+
+                <div class="cta-box">
+                    <h2 style="font-size: 30px; color: var(--primary-blue); margin-bottom: 20px;">Venda Seus Itens
+                        Conosco</h2>
+                    <p style="font-size: 18px; color: var(--dark-grey-text); margin-bottom: 30px;">Anunciar um leilão é
+                        extremamente fácil:</p>
+
+                    <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
+                        <div
+                            style="max-width: 350px; text-align: left; padding: 20px; border: 1px solid var(--primary-blue); border-radius: 8px; background-color: var(--white);">
+                            <h4 style="font-size: 20px; color: var(--accent-orange); margin-bottom: 10px;">
+                                Anúncios</h4>
+                            <p style="margin-bottom: 15px; color: var(--dark-grey-text);">Perfeito para quem tem um
+                                único item ou vende esporadicamente. Liste seu item em minutos e pague apenas a
+                                comissão.</p>
+                            <a href="/form/auction" class="btn-primary"
+                                style="padding: 10px 20px; border-radius: 20px;">Anunciar 1
+                                Item</a>
+                        </div>
+
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    {% include "components/Footer.html" %}
+
+
+</body>
+
+</html>

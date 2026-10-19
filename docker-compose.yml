@@ -1,0 +1,60 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    env_file:
+      - .env
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - private_network
+
+  redis:
+    image: redis:7
+    container_name: redis_cache
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks: 
+      - private_network
+
+  web:
+    build: .
+    container_name: flask_app
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - ./:/app
+    command: flask run --host=0.0.0.0
+    networks:
+      - public_network
+      - private_network
+
+volumes:
+  pgdata:
+  redis_data:
+
+networks:
+  private_network:
+    driver: bridge
+  public_network:
+    driver: bridge

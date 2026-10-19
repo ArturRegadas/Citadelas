@@ -1,0 +1,45 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+*.log
+.venv
+
+# =========================
+# IDEs and Editors
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# Local Settings
+# =========================
+instance/
+config_local.py
+markdown.py
+test.py
+obs.txt
+*.env
+database.csv
+
+# =========================
+# DATABASE
+# =========================
+*.db
+*.sqlite3
+
+# =========================
+# Docker
+# =========================
+
+# =========================
+# Migrations
+# =========================
+migrations/versions/

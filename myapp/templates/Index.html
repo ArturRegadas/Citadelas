@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hackathon Starter - Plataforma Base</title>
+  <link rel="shortcut icon"
+    href="https://res.cloudinary.com/dnet6nodm/image/upload/v1761875332/Users_photos/frijvnfjk7rlwtwxktd5.png"
+    type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/StyleIndex.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/header.css') }}">
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <style>
+    .hero-section {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #fff;
+      padding: 70px 20px;
+      text-align: center;
+    }
+    .hero-section h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      background: linear-gradient(90deg, #60a5fa, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-section p {
+      font-size: 1.15rem;
+      max-width: 720px;
+      margin: 0 auto 30px;
+      color: #94a3b8;
+    }
+    .hero-cta {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .btn-hero {
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      font-size: 1rem;
+    }
+    .btn-hero-primary {
+      background: #2563eb;
+      color: #fff;
+    }
+    .btn-hero-primary:hover {
+      background: #1d4ed8;
+      color: #fff;
+    }
+    .btn-hero-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .btn-hero-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+      padding: 50px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .module-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .module-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+    .module-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 18px;
+    }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-purple { background: #f3e8ff; color: #7e22ce; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .module-card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 10px;
+      color: #0f172a;
+    }
+    .module-card p {
+      font-size: 0.95rem;
+      color: #64748b;
+      line-height: 1.5;
+    }
+    .socket-demo-section {
+      background: #f8fafc;
+      padding: 50px 20px;
+      border-top: 1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .socket-box {
+      max-width: 700px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .socket-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 15px;
+    }
+    .dot-status {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #cbd5e1;
+    }
+    .dot-status.online { background: #22c55e; }
+    .chat-messages {
+      height: 180px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      background: #fafafa;
+      font-size: 0.9rem;
+    }
+    .chat-msg-item {
+      margin-bottom: 6px;
+      padding-bottom: 4px;
+      border-bottom: 1px dashed #eee;
+    }
+    .socket-input-row {
+      display: flex;
+      gap: 10px;
+    }
+    .socket-input-row input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      outline: none;
+    }
+    .socket-input-row button {
+      padding: 10px 20px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  {% include 'components/Header.html' %}
+
+  <main>
+    <section class="hero-section">
+      <div class="container">
+        <h1>Hackathon Core Starter</h1>
+        <p>
+          Base limpa e acelerada para seu projeto: autenticação completa (PF/PJ, Google OAuth, Tokens, 2FA), 
+          controle de acesso por diretórios, WebSockets em tempo real, banco de dados desacoplado e painel administrativo.
+        </p>
+        <div class="hero-cta">
+          {% if user %}
+            <a href="{{ url_for('profilePage.ProfilePage') }}" class="btn-hero btn-hero-primary">Acessar Meu Perfil</a>
+            <a href="{{ url_for('configPage.ConfigPage') }}" class="btn-hero btn-hero-secondary">Configurações</a>
+          {% else %}
+            <a href="{{ url_for('signUpPage.SignUpPage') }}" class="btn-hero btn-hero-primary">Criar Conta Agora</a>
+            <a href="#socket-demo" class="btn-hero btn-hero-secondary">Testar Sockets</a>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    <section class="container modules-grid">
+      <div class="module-card">
+        <div class="module-icon icon-blue"><i class="fas fa-user-shield"></i></div>
+        <h3>Autenticação Completa</h3>
+        <p>Login e cadastro multi-etapas com suporte a Pessoa Física e Jurídica, tokens de validação, 2FA e integração com Google OAuth.</p>
+      </div>
+
+      <div class="module-card">
+        <div class="module-icon icon-green"><i class="fas fa-bolt"></i></div>
+        <h3>WebSockets em Tempo Real</h3>
+        <p>Flask-SocketIO configurado e desacoplado, com suporte a salas (rooms), mensageria instantânea, eventos e reconexão automática.</p>
+      </div>
+
+      <div class="module-card">
+        <div class="module-icon icon-purple"><i class="fas fa-shield-alt"></i></div>
+        <h3>Rotas & Permissões</h3>
+        <p>Sistema automático que escaneia rotas por pastas (<code>public</code>, <code>common</code>, <code>admin</code>) e aplica segurança sem boilerplates.</p>
+      </div>
+
+      <div class="module-card">
+        <div class="module-icon icon-orange"><i class="fas fa-terminal"></i></div>
+        <h3>Admin & Banco de Dados</h3>
+        <p>Terminal interativo administrativo com execução SQL segura, force logout global e modelos SQLAlchemy com auto-descoberta.</p>
+      </div>
+    </section>
+
+    <section class="socket-demo-section" id="socket-demo">
+      <div class="socket-box">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h4 style="margin: 0; font-size: 1.15rem;"><i class="fas fa-satellite-dish" style="color: #2563eb; margin-right: 8px;"></i>Live WebSocket Channel</h4>
+          <div class="socket-status">
+            <span id="socket-dot" class="dot-status"></span>
+            <span id="socket-status-text">Conectando...</span>
+          </div>
+        </div>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">
+          Sala padrão: <code>geral</code>. Envie uma mensagem em tempo real para testar o SocketIO.
+        </p>
+
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-msg-item" style="color: #94a3b8;"><em>Aguardando conexão com o servidor WebSocket...</em></div>
+        </div>
+
+        <div class="socket-input-row">
+          <input type="text" id="socket-input" placeholder="Digite uma mensagem para o WebSocket..." autocomplete="off">
+          <button type="button" id="socket-send-btn">Enviar</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  {% include 'components/Footer.html' %}
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const socket = io();
+      const dot = document.getElementById("socket-dot");
+      const statusText = document.getElementById("socket-status-text");
+      const messagesDiv = document.getElementById("chat-messages");
+      const input = document.getElementById("socket-input");
+      const sendBtn = document.getElementById("socket-send-btn");
+
+      socket.on("connect", () => {
+        dot.classList.add("online");
+        statusText.textContent = "Conectado";
+        socket.emit("join_room", { room_id: "geral" });
+      });
+
+      socket.on("disconnect", () => {
+        dot.classList.remove("online");
+        statusText.textContent = "Desconectado";
+      });
+
+      socket.on("room_joined", (data) => {
+        appendMsg(`[Sistema] ${data.username} entrou na sala ${data.room_id}`);
+      });
+
+      socket.on("new_message", (data) => {
+        appendMsg(`<strong>${data.username}:</strong> ${data.message}`);
+      });
+
+      function appendMsg(html) {
+        const item = document.createElement("div");
+        item.className = "chat-msg-item";
+        item.innerHTML = html;
+        messagesDiv.appendChild(item);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      function send() {
+        const text = input.value.trim();
+        if (!text) return;
+        socket.emit("send_message", { room_id: "geral", message: text });
+        input.value = "";
+      }
+
+      sendBtn.addEventListener("click", send);
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") send();
+      });
+    });
+  </script>
+</body>
+</html>

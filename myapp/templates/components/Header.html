@@ -1,0 +1,90 @@
+<header class="main-header">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/header.css') }}">
+  <div class="container header-content">
+    <a href="/">
+      <div class="logo" style="text-decoration: none;">
+        <i class="fas fa-rocket" style="font-size: 24px; color: #3b82f6; margin-right: 8px;"></i>
+        <span>HackApp</span>
+      </div>
+    </a>
+
+    <nav class="main-nav-header">
+      <ul class="menu-header">
+        <li><a href="/" class="nav-link">Início</a></li>
+        <li class="dropdown-categories-header">
+          <a href="/aboutUsPage" class="nav-link">Sobre</a>
+          <ul class="categories-header-menu">
+            <li><a href="/aboutUsPage">Sobre Nós</a></li>
+            <li><a href="/servicesPage">Serviços</a></li>
+            <li><a href="/howPage">Como Funciona</a></li>
+            <li><a href="/faqPage">FAQ</a></li>
+            <li><a href="/termsPage">Políticas</a></li>
+          </ul>
+        </li>
+        <li><a href="/contactPage" class="nav-link">Contato</a></li>
+      </ul>
+
+      {% if not user %}
+      <div class="auth-buttons-header">
+        <a href="#" id="openLogin" class="btn-login-header">Entrar / Cadastrar</a>
+
+        <div id="loginModal">
+          <div class="login-content" id="login-cc">
+            <span id="closeLogin" class="close">&times;</span>
+            <h2 style="margin-bottom: 10px;">Entrar</h2>
+
+            <form id="login-form">
+              <div class="input-group-header">
+                <label for="login-email">Email ou Usuário</label>
+                <input type="text" id="login-email" placeholder="seu@email.com" required>
+              </div>
+
+              <div class="input-group-header">
+                <label for="login-password">Senha</label>
+                <input type="password" id="login-password" required>
+                <a href="/change/now" class="forgot-password-header">Esqueceu sua senha?</a>
+              </div>
+
+              <button type="submit" class="btn-primary-header login-submit">Entrar</button>
+
+              <button type="button" class="google-login" style="background-color: #0C2340;" onclick="window.location.href='/auth/google/redirect'">
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/2048px-Google_%22G%22_logo.svg.png"
+                  alt="Google">
+                Entrar com Google
+              </button>
+            </form>
+
+            <div class="signup-link">
+              <p>Não tem conta?
+                <a href="{{url_for('signUpPage.SignUpPage')}}" class="sign-up-btn">Cadastre-se agora</a>
+              </p>
+            </div>
+
+            <p class="message" id="message"></p>
+          </div>
+        </div>
+      </div>
+
+      {% else %}
+      <div class="user-menu-header">
+        <button id="userButton" class="user-button">
+          <img src="{{ user.photo }}" alt="User" class="user-avatar" />
+        </button>
+        <div id="dropdownMenu" class="dropdown hidden">
+          <p class="dropdown-header">Olá, {{ user.name }}</p>
+          <hr />
+          <a href="{{url_for('profilePage.ProfilePage')}}" class="dropdown-item">Perfil</a>
+          <a href="{{url_for('configPage.ConfigPage')}}" class="dropdown-item">Configurações</a>
+          <a href="/admin" class="dropdown-item">Terminal Admin</a>
+          <hr />
+          <a href="{{url_for('logout.logout')}}" class="dropdown-item logout">Sair</a>
+        </div>
+      </div>
+      {% endif %}
+    </nav>
+
+  </div>
+  <script src="{{ url_for('static', filename='js/components/header.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/mains/LoginMain.js') }}" type="module"></script>
+</header>

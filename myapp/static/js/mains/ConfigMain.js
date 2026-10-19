@@ -1,0 +1,156 @@
+document.addEventListener("DOMContentLoaded", function () {
+  const navItems = document.querySelectorAll(".nav-item[data-section]");
+  const contentSections = document.querySelectorAll(".settings-section");
+
+
+  function switchSection(sectionId) {
+    contentSections.forEach((s) => {
+  
+      s.classList.add("hidden-section");
+      s.classList.remove("active-section");
+    });
+
+    navItems.forEach((i) => i.classList.remove("active"));
+
+    const target = document.getElementById(sectionId);
+    if (target) {
+      target.classList.remove("hidden-section");
+      target.classList.add("active-section");
+    }
+
+    const btn = document.querySelector(`.nav-item[data-section="${sectionId}"]`);
+    if (btn) btn.classList.add("active");
+  }
+
+  navItems.forEach((item) => {
+    item.addEventListener("click", (e) => {
+      e.preventDefault();
+      const sectionId = item.dataset.section;
+      if (sectionId) switchSection(sectionId);
+    });
+  });
+
+  switchSection(defaultSection || "profile");
+
+  const dropzone = document.getElementById("avatar-dropzone");
+  const fileInput = document.getElementById("avatar-file");
+
+  if (dropzone && fileInput) {
+    dropzone.addEventListener("click", () => fileInput.click());
+
+    dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.classList.add("dragover");
+    });
+
+    dropzone.addEventListener("dragleave", () =>
+      dropzone.classList.remove("dragover")
+    );
+
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("dragover");
+
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith("image/")) {
+        fileInput.files = e.dataTransfer.files;
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          document.querySelector(".avatar").src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+
+  const newAddressForm = document.getElementById("new-address-form");
+
+  if (newAddressForm) {
+    newAddressForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(newAddressForm);
+
+      fetch("/new/address", {
+        method: "POST",
+        body: formData,
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.success) {
+            newAddressForm.reset();
+            loadAddresses();
+          } else {
+            alert(data.error || "Erro ao adicionar endereço.");
+          }
+        })
+        .catch(() => alert("Erro inesperado ao enviar o endereço."));
+    });
+  }
+
+  function loadAddresses() {
+    fetch("/api/addresses")
+      .then((r) => r.json())
+      .then((addresses) => {
+        const container = document.getElementById("addresses_container");
+
+        let html = `
+          <h3>Meus Endereços</h3>
+        `;
+
+        if (!addresses.length) {
+          html += `<p>Você ainda não possui endereços cadastrados.</p>`;
+        } else {
+          addresses.forEach((addr) => {
+            html += `
+             <div class="address-item">
+    <div class="address-header">
+        <p class="address-main">
+            <strong>${addr.street_name}, ${addr.street_number}</strong>
+            ${addr.apt || ""}
+        </p>
+
+        ${
+          addr.principal_address
+            ? `<span class="badge">Principal</span>`
+            : ""
+        }
+    </div>
+
+    <p class="address-info">${addr.district} - ${addr.city}/${addr.state}</p>
+    <p class="address-info">CEP: ${addr.zip_code}</p>
+
+    <form class="remove-address-form" data-id="${addr.address_id}">
+        <button type="submit" class="btn-danger">Remover</button>
+    </form>
+</div>
+            `;
+          });
+        }
+
+        container.innerHTML = html;
+      });
+  }
+
+  document.addEventListener("submit", function (e) {
+    const form = e.target;
+
+    if (form.classList.contains("remove-address-form")) {
+      e.preventDefault();
+      const id = form.dataset.id;
+
+      fetch(`/removeAddress/${id}`, {
+        method: "POST",
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.success) {
+            loadAddresses();
+          }
+        })
+        .catch(() => alert("Erro ao remover endereço."));
+    }
+  });
+});
