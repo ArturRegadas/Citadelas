@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CitaDelas — Painel de Recomendações & Equidade de Gênero</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            purple: '#4A154B',
+                            lightpurple: '#7C3AED',
+                            fuchsia: '#D946EF',
+                            pink: '#EC4899',
+                            amber: '#F59E0B',
+                            dark: '#0B0F19',
+                            card: '#1E293B'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0B0F19;
+            color: #F8FAFC;
+        }
+        .citation-font {
+            font-family: 'Merriweather', serif;
+        }
+        .ambient-glow {
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(124, 58, 237, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(217, 70, 239, 0.1) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B0F19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7C3AED;
+        }
+
+        .pdf-citation-highlight { position: relative; }
+        .pdf-citation-highlight:hover { filter: brightness(0.94); }
+        .citation-card:hover {
+            border-color: var(--citation-color) !important;
+            background: linear-gradient(90deg, var(--citation-soft), rgba(15,23,42,.90));
+        }
+        .citation-pulse { animation: citationPulse 1.6s ease-in-out 1; }
+        @keyframes citationPulse {
+            0%,100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+        }
+        @media (max-width: 1279px) {
+            #pdf-scroll-area { height: 650px; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#0B0F19] text-slate-100 antialiased ambient-glow">
+
+    <!-- 1. CABEÇALHO PRINCIPAL -->
+    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+            
+            <!-- Logo & Identidade -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchView('results')">
+                <div class="h-11 w-11 rounded-2xl bg-gradient-to-br from-purple-600 via-fuchsia-600 to-amber-500 flex items-center justify-center shadow-lg ring-1 ring-white/20">
+                    <i class="fa-solid fa-quote-left text-white text-xl font-bold"></i>
+                </div>
+                <div>
+                    <span class="text-2xl font-black tracking-tight text-white bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-fuchsia-200 to-amber-200">
+                        CitaDelas
+                    </span>
+                    <p class="text-[11px] text-slate-400 font-medium hidden sm:block">Plataforma de Recomendação com Equidade de Gênero</p>
+                </div>
+            </div>
+
+            <!-- Navegação por Abas/Views -->
+            <nav class="flex items-center bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
+                <button id="nav-btn-results" onclick="switchView('results')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-purple-800 text-white shadow-md">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>Recomendações</span>
+                </button>
+                <button id="nav-btn-compare" onclick="switchView('compare')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-chart-line text-amber-400"></i>
+                    <span>Painel Comparativo</span>
+                </button>
+                <button id="nav-btn-pdf" onclick="switchView('pdf')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-file-pdf text-rose-400"></i>
+                    <span class="hidden md:inline">PDF Analisado</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast-notification" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-slate-900 border border-purple-500/40 text-slate-100 px-5 py-3.5 rounded-2xl shadow-2xl flex items-center space-x-3">
+            <div class="h-8 w-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm font-bold">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <span id="toast-message" class="text-xs font-semibold">Notificação do sistema</span>
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- ================================================================= -->
+        <!-- 2. VIEW RECOMENDAÇÕES (GRID COM SIDEBAR DE FILTROS & CARDS)       -->
+        <!-- ================================================================= -->
+        <section id="view-results" class="space-y-6">
+            
+            <!-- Banner / Header da View -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/60 border border-slate-800 p-6 rounded-3xl">
+                <div>
+                    <h1 class="text-2xl font-black text-white flex items-center space-x-3">
+                        <i class="fa-solid fa-sparkles text-purple-400"></i>
+                        <span>Recomendações Acadêmicas</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 mt-1">
+                        Artigos científicos mapeados semantada e priorizados por diversidade e liderança feminina nas autorias.
+                    </p>
+                </div>
+                <div class="flex items-center space-x-3 text-xs">
+                    <span class="text-slate-400 font-medium">Ordenar por:</span>
+                    <select id="sort-select" onchange="applyFiltersAndSort()" class="bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-purple-500 cursor-pointer">
+                        <option value="score">Score de Match (%)</option>
+                        <option value="year">Ano de Publicação (Recentes)</option>
+                        <option value="citations">Quantidade de Citações</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- LAYOUT EM GRID: SIDEBAR (ESQUERDA) + CARDS (DIREITA) -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                
+                <!-- SIDEBAR DE FILTROS (1 Coluna em LG) -->
+                <aside class="space-y-6">
+                    <div class="bg-slate-900/80 border border-slate-800 p-6 rounded-3xl space-y-6 sticky top-28">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                            <h3 class="text-xs font-black uppercase tracking-wider text-purple-300 flex items-center space-x-2">
+                                <i class="fa-solid fa-filter"></i>
+                                <span>Filtros Mapeados</span>
+                            </h3>
+                            <button onclick="resetFilters()" class="text-[11px] text-slate-500 hover:text-purple-400 transition font-semibold">
+                                Limpar
+                            </button>
+                        </div>
+
+                        <!-- 1. Busca por Palavra-Chave -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-300">Busca por Termo</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                                <input type="text" id="filter-search" oninput="applyFiltersAndSort()" placeholder="Título, autor, tópico..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500 transition">
+                            </div>
+                        </div>
+
+                        <!-- 2. Filtros Toggle -->
+                        <div class="space-y-3 pt-2 border-t border-slate-800/80">
+                            <label class="text-xs font-bold text-slate-300">Critérios de Inclusão</label>
+
+                            <!-- Toggle Acesso Aberto -->
+                            <label class="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800/80 cursor-pointer hover:border-slate-700 transition">
+                                <div class="flex items-center space-x-2 text-xs text-slate-300 font-medium">
+                                    <i class="fa-solid fa-lock-open text-emerald-400"></i>
+                                    <span>Acesso Aberto</span>
+                                </div>
+                                <input type="checkbox" id="filter-oa" onchange="applyFiltersAndSort()" class="accent-purple-500 h-4 w-4 rounded cursor-pointer">
+                            </label>
+
+                            <!-- Toggle Autoras Femininas Exclusivas -->
+                            <label class="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800/80 cursor-pointer hover:border-slate-700 transition">
+                                <div class="flex items-center space-x-2 text-xs text-slate-300 font-medium">
+                                    <i class="fa-solid fa-venus text-pink-400"></i>
+                                    <span>100% Autoras Femininas</span>
+                                </div>
+                                <input type="checkbox" id="filter-female" onchange="applyFiltersAndSort()" class="accent-pink-500 h-4 w-4 rounded cursor-pointer">
+                            </label>
+                        </div>
+
+                        <!-- 3. Faixa do Ano de Publicação -->
+                        <div class="space-y-2 pt-2 border-t border-slate-800/80">
+                            <div class="flex justify-between items-center text-xs">
+                                <label class="font-bold text-slate-300">Ano Mínimo</label>
+                                <span id="year-label" class="text-purple-300 font-mono font-bold">2020</span>
+                            </div>
+                            <input type="range" id="filter-year" min="2018" max="2024" value="2020" oninput="document.getElementById('year-label').innerText = this.value; applyFiltersAndSort();" class="w-full accent-purple-500 cursor-pointer">
+                        </div>
+
+                        <!-- Contador Estatístico da Sidebar -->
+                        <div class="bg-purple-950/40 border border-purple-800/40 p-4 rounded-2xl text-center space-y-1">
+                            <span class="text-[10px] uppercase font-bold text-purple-300 tracking-wider">Mapeados na Sessão</span>
+                            <div id="results-count" class="text-2xl font-black text-white">0</div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- AREA PRINCIPAL DE CARDS (3 Colunas em LG) -->
+                <main class="lg:col-span-3 space-y-6">
+                    <div id="recommendations-list" class="space-y-6"></div>
+                </main>
+            </div>
+        </section>
+
+
+        <!-- ================================================================= -->
+        <!-- 3. VIEW PAINEL COMPARATIVO DE PESQUISAS                           -->
+        <!-- ================================================================= -->
+        <section id="view-compare" class="hidden space-y-8">
+            
+            <!-- SELETOR DE ATÉ 3 PESQUISAS ATIVAS -->
+            <div class="bg-slate-900/80 border border-slate-800 p-6 rounded-3xl space-y-5 shadow-xl">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-black text-white flex items-center space-x-3">
+                            <i class="fa-solid fa-chart-pie text-amber-400"></i>
+                            <span>Comparação Multimétrica Interativa</span>
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Selecione até <strong>3 pesquisas</strong> para comparar os indicadores semânticos e métricas de diversidade.</p>
+                    </div>
+
+                    <span id="selection-counter-badge" class="text-xs bg-purple-950 text-purple-300 border border-purple-700/50 px-3 py-1.5 rounded-xl font-mono font-bold self-start md:self-auto">
+                        3 de 3 Selecionadas
+                    </span>
+                </div>
+
+                <!-- Lista com Checkboxes -->
+                <div id="paper-selector-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-3 border-t border-slate-800/80"></div>
+            </div>
+
+            <!-- GRID DOS 7 CARDS DE MÉTRICAS -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- Metric 1: Similaridade -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 space-y-3 shadow-xl">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-slate-200 flex items-center space-x-2">
+                            <i class="fa-solid fa-bullseye text-purple-400"></i>
+                            <span>1. Similaridade (%)</span>
+                        </h3>
+                        <select onchange="changeMetricChartType('similarity', this.value)" class="bg-slate-950 text-purple-300 text-[10px] font-semibold border border-purple-800/50 rounded-lg px-2 py-1 focus:outline-none">
+                            <option value="radar">Radar</option>
+                            <option value="bar">Barras V.</option>
+                            <option value="horizontalBar">Barras H.</option>
+                            <option value="doughnut">Rosca</option>
+                        </select>
+                    </div>
+                    <div class="h-52"><canvas id="chart-similarity"></canvas></div>
+                    <div class="text-[11px] bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex justify-between items-center text-slate-300">
+                        <span class="text-slate-400">Destaque:</span>
+                        <strong id="winner-similarity" class="text-purple-300 font-bold">-</strong>
+                    </div>
+                </div>
+
+                <!-- Metric 2: Problema Pesquisado -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 space-y-3 shadow-xl">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-slate-200 flex items-center space-x-2">
+                            <i class="fa-solid fa-magnifying-glass text-amber-400"></i>
+                            <span>2. Problema Pesquisado (%)</span>
+                        </h3>
+                        <select onchange="changeMetricChartType('problem_fit', this.value)" class="bg-slate-950 text-amber-300 text-[10px] font-semibold border border-amber-800/50 rounded-lg px-2 py-1 focus:outline-none">
+                            <option value="doughnut">Rosca</option>
+                            <option value="bar">Barras V.</option>
+                            <option value="horizontalBar">Barras H.</option>
+                            <option value="radar">Radar</option>
+                        </select>
+                    </div>
+                    <div class="h-52"><canvas id="chart-problem_fit"></canvas></div>
+                    <div class="text-[11px] bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex justify-between items-center text-slate-300">
+                        <span class="text-slate-400">Destaque:</span>
+                        <strong id="winner-problem_fit" class="text-amber-300 font-bold">-</strong>
+                    </div>
+                </div>
+
+                <!-- Metric 3: Atualidade -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 space-y-3 shadow-xl">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-slate-200 flex items-center space-x-2">
+                            <i class="fa-solid fa-clock-rotate-left text-fuchsia-400"></i>
+                            <span>3. Atualidade (%)</span>
+                        </h3>
+                        <select onchange="changeMetricChartType('freshness', this.value)" class="bg-slate-950 text-fuchsia-300 text-[10px] font-semibold border border-fuchsia-800/50 rounded-lg px-2 py-1 focus:outline-none">
+                            <option value="bar">Barras V.</option>
+                            <option value="horizontalBar">Barras H.</option>
+                            <option value="line">Linha</option>
+                            <option value="doughnut">Rosca</option>
+                        </select>
+                    </div>
+                    <div class="h-52"><canvas id="chart-freshness"></canvas></div>
+                    <div class="text-[11px] bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex justify-between items-center text-slate-300">
+                        <span class="text-slate-400">Destaque:</span>
+                        <strong id="winner-freshness" class="text-fuchsia-300 font-bold">-</strong>
+                    </div>
+                </div>
+
+                <!-- Metric 4: Relevância OpenAlex -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 space-y-3 shadow-xl">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-slate-200 flex items-center space-x-2">
+                            <i class="fa-solid fa-globe text-blue-400"></i>
+                            <span>4. Relevância OpenAlex (%)</span>
+                        </h3>
+                        <select onchange="changeMetricChartType('openalex_relevance', this.value)" class="bg-slate-950 text-blue-300 text-[10px] font-semibold border border-blue-800/50 rounded-lg px-2 py-1 focus:outline-none">
+                            <option value="polarArea">Área Polar</option>
+                            <option value="bar">Barras V.</option>
+                            <option value="horizontalBar">Barras H.</option>
+                            <option value="doughnut">Rosca</option>
+                        </select>
+                    </div>
+                    <div class="h-52"><canvas id="chart-openalex_relevance"></canvas></div>
+                    <div class="text-[11px] bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex justify-between items-center text-slate-300">
+                        <span class="text-slate-400">Destaque:</span>
+                        <strong id="winner-openalex_relevance" class="text-blue-300 font-bold">-</strong>
+                    </div>
+                </div>
+
+                <!-- Metric 5: Complementaridade -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 space-y-3 shadow-xl">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-slate-200 flex items-center space-x-2">
+                            <i class="fa-solid fa-diagram-project text-emerald-400"></i>
+                            <span>5. Complementaridade (%)</span>
+                        </h3>
+                        <select onchange="changeMetricChartType('complementarity', this.value)" class="bg-slate-950 text-emerald-300 text-[10px] font-semibold border border-emerald-800/50 rounded-lg px-2 py-1 focus:outline-none">
+                            <option value="horizontalBar">Barras H.</option>
+                            <option value="bar">Barras V.</option>
+                            <option value="radar">Radar</option>
+                        </select>
+                    </div>
+                    <div class="h-52"><canvas id="chart-complementarity"></canvas></div>
+                    <div class="text-[11px] bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex justify-between items-center text-slate-300">
+                        <span class="text-slate-400">Destaque:</span>
+                        <strong id="winner-complementarity" class="text-emerald-300 font-bold">-</strong>
+                    </div>
+                </div>
+
+                <!-- Metric 6: Confiabilidade -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 space-y-3 shadow-xl">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-slate-200 flex items-center space-x-2">
+                            <i class="fa-solid fa-shield-halved text-cyan-400"></i>
+                            <span>6. Confiabilidade (%)</span>
+                        </h3>
+                        <select onchange="changeMetricChartType('reliability', this.value)" class="bg-slate-950 text-cyan-300 text-[10px] font-semibold border border-cyan-800/50 rounded-lg px-2 py-1 focus:outline-none">
+                            <option value="doughnut">Rosca</option>
+                            <option value="bar">Barras V.</option>
+                            <option value="horizontalBar">Barras H.</option>
+                        </select>
+                    </div>
+                    <div class="h-52"><canvas id="chart-reliability"></canvas></div>
+                    <div class="text-[11px] bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex justify-between items-center text-slate-300">
+                        <span class="text-slate-400">Destaque:</span>
+                        <strong id="winner-reliability" class="text-cyan-300 font-bold">-</strong>
+                    </div>
+                </div>
+
+                <!-- Metric 7: Composição de Gênero (Card Largo) -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 space-y-3 shadow-xl md:col-span-2 lg:col-span-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-slate-200 flex items-center space-x-2">
+                            <i class="fa-solid fa-venus-mars text-pink-400"></i>
+                            <span>7. Composição de Gênero das Autorias nas Pesquisas Selecionadas (%)</span>
+                        </h3>
+                        <span class="text-[10px] bg-pink-950 text-pink-300 px-2.5 py-1 rounded-lg font-mono">Empilhado</span>
+                    </div>
+                    <div class="h-60"><canvas id="chart-gender"></canvas></div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ================================================================= -->
+        <!-- 4. VIEW PDF ANALISADO — LEITURA + LOCAIS DE CITAÇÃO               -->
+        <!-- ================================================================= -->
+        <section id="view-pdf" class="hidden space-y-5">
+
+            <!-- Cabeçalho -->
+            <div class="bg-slate-900/80 border border-slate-800 p-5 md:p-6 rounded-3xl shadow-xl">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <div class="h-10 w-10 rounded-xl bg-rose-950/70 border border-rose-500/30 flex items-center justify-center">
+                                <i class="fa-solid fa-file-pdf text-rose-400"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-black text-white">Análise do artigo</h2>
+                                <p class="text-xs text-slate-400 mt-0.5">
+                                    Locais recomendados para inserir as citações encontradas pelo CitaDelas.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2 text-[11px] text-slate-400 bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl">
+                            <span class="h-2.5 w-2.5 rounded-full bg-purple-500"></span>
+                            <span>Local de citação</span>
+                        </div>
+                        <span class="text-xs bg-emerald-950 text-emerald-300 border border-emerald-500/30 px-3 py-2 rounded-xl font-bold">
+                            <i class="fa-solid fa-circle-check mr-1"></i> Análise concluída
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DIVISÃO PRINCIPAL: PDF + EXPLICAÇÕES -->
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+
+                <!-- ========================================================= -->
+                <!-- LADO ESQUERDO — DOCUMENTO / PDF                           -->
+                <!-- ========================================================= -->
+                <div class="xl:col-span-7 bg-slate-950 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+
+                    <!-- Barra do visualizador -->
+                    <div class="h-14 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="h-8 w-8 rounded-lg bg-rose-950/70 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-file-pdf text-rose-400 text-sm"></i>
+                            </span>
+                            <div class="min-w-0">
+                                <p id="pdf-document-title" class="text-xs font-bold text-slate-200 truncate">
+                                    Documento submetido
+                                </p>
+                                <p id="pdf-page-indicator" class="text-[10px] text-slate-500">
+                                    Página 1 de 3
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="changePdfPage(-1)"
+                                    class="h-8 w-8 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-600 transition"
+                                    title="Página anterior">
+                                <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                            </button>
+
+                            <button onclick="changePdfPage(1)"
+                                    class="h-8 w-8 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-600 transition"
+                                    title="Próxima página">
+                                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            </button>
+
+                            <div class="w-px h-5 bg-slate-800 mx-1"></div>
+
+                            <button onclick="zoomPdf(-0.1)"
+                                    class="h-8 w-8 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:text-white transition">
+                                <i class="fa-solid fa-minus text-[10px]"></i>
+                            </button>
+
+                            <span id="pdf-zoom-label" class="text-[10px] font-mono text-slate-500 w-10 text-center">100%</span>
+
+                            <button onclick="zoomPdf(0.1)"
+                                    class="h-8 w-8 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:text-white transition">
+                                <i class="fa-solid fa-plus text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Área de rolagem do documento -->
+                    <div id="pdf-scroll-area"
+                         class="h-[780px] overflow-auto p-5 md:p-8 bg-[#111827]">
+
+                        <!-- Página simulada do PDF. O backend poderá substituir o conteúdo
+                             e os highlights por dados reais posteriormente. -->
+                        <div id="pdf-page"
+                             class="mx-auto bg-white text-slate-900 shadow-2xl rounded-sm w-full max-w-[760px] min-h-[1040px] px-10 md:px-14 py-12 transition-transform duration-200 origin-top">
+
+                            <div class="border-b border-slate-200 pb-5 mb-7">
+                                <p class="text-[9px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-3">
+                                    Artigo científico
+                                </p>
+                                <h3 id="pdf-paper-title" class="text-xl md:text-2xl font-black leading-tight text-slate-900">
+                                    Introdução à Ciência da Computação para Meninas
+                                </h3>
+                                <p class="text-[10px] text-slate-500 mt-3">
+                                    Ana Paula Silva · Maria Oliveira · 2024
+                                </p>
+                            </div>
+
+                            <div id="pdf-page-content" class="citation-font text-[11px] leading-[1.9] text-justify space-y-5">
+                                <!-- Preenchido pelo JavaScript -->
+                            </div>
+
+                            <div class="mt-12 pt-5 border-t border-slate-200 text-[9px] text-slate-400 flex justify-between">
+                                <span>CitaDelas — documento analisado</span>
+                                <span id="pdf-footer-page">1</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================================= -->
+                <!-- LADO DIREITO — EXPLICAÇÕES DAS CITAÇÕES                   -->
+                <!-- ========================================================= -->
+                <aside class="xl:col-span-5 xl:sticky xl:top-24 space-y-4">
+
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-xl">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <h3 class="text-sm font-black text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-location-dot text-purple-400"></i>
+                                    Locais de citação
+                                </h3>
+                                <p class="text-[11px] text-slate-500 mt-1">
+                                    Cada cor corresponde a um ponto recomendado no documento.
+                                </p>
+                            </div>
+                            <span id="citation-count"
+                                  class="text-[10px] font-black bg-purple-950 text-purple-300 border border-purple-700/40 px-2.5 py-1 rounded-lg">
+                                0 locais
+                            </span>
+                        </div>
+                    </div>
+
+                    <div id="citation-recommendations" class="space-y-4">
+                        <!-- Cards preenchidos pelo JavaScript -->
+                    </div>
+
+                    <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
+                        <div class="flex gap-3">
+                            <i class="fa-solid fa-circle-info text-slate-500 mt-0.5"></i>
+                            <p class="text-[10px] leading-relaxed text-slate-500">
+                                As marcações representam sugestões da análise automática. A posição e a justificativa
+                                serão preenchidas pelo backend com os dados retornados pela análise do artigo.
+                            </p>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+    <!-- 5. DRAWER LATERAL (ANÁLISE COMPLETA CONTÍNUA DO ARTIGO)               -->
+    <!-- ===================================================================== -->
+    <div id="detail-drawer" class="fixed inset-0 z-50 pointer-events-none hidden">
+        <!-- Overlay -->
+        <div id="drawer-overlay" onclick="closeDrawer()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm opacity-0 transition-opacity duration-300 pointer-events-auto"></div>
+        
+        <!-- Panel -->
+        <div id="drawer-panel" class="absolute right-0 top-0 bottom-0 w-full max-w-2xl bg-slate-900 border-l border-slate-800 shadow-2xl p-6 md:p-8 overflow-y-auto space-y-8 transform translate-x-full transition-transform duration-300 pointer-events-auto">
+            
+            <!-- Drawer Header -->
+            <div class="flex items-start justify-between border-b border-slate-800 pb-5">
+                <div class="space-y-2 pr-4">
+                    <span id="drawer-id-badge" class="text-[10px] bg-purple-950 text-purple-300 border border-purple-700/50 px-2.5 py-0.5 rounded-full font-mono font-bold">artigo-001</span>
+                    <h2 id="drawer-title" class="text-lg font-extrabold text-white leading-snug break-words">Título do Artigo</h2>
+                </div>
+                <button onclick="closeDrawer()" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Gráfico Donut de Gênero -->
+            <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl space-y-3">
+                <div class="flex justify-between items-center">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center space-x-2">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>Composição das Autorias</span>
+                    </h4>
+                    <span id="female-percentage-text" class="text-xs font-black text-pink-400">75% Autoras Femininas</span>
+                </div>
+                <div class="flex items-center justify-center py-2">
+                    <div class="w-48 h-48">
+                        <canvas id="chart-gender-pie"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumo e Objetivo -->
+            <div class="space-y-4">
+                <div class="space-y-1.5">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Resumo Executivo</h4>
+                    <p id="drawer-abstract" class="text-xs text-slate-300 leading-relaxed citation-font italic bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 break-words"></p>
+                </div>
+                <div class="space-y-1.5">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Objetivo Central da Pesquisa</h4>
+                    <p id="drawer-objective" class="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 break-words"></p>
+                </div>
+            </div>
+
+            <!-- Tópicos Relacionados -->
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-2">
+                    <i class="fa-solid fa-tags text-purple-400"></i>
+                    <span>Tópicos & Finalidades Mapeadas</span>
+                </h4>
+                <div id="drawer-topics-container" class="space-y-3"></div>
+            </div>
+
+            <!-- Referências Existentes -->
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-2">
+                    <i class="fa-solid fa-book-bookmark text-amber-400"></i>
+                    <span>Referências Já Utilizadas</span>
+                </h4>
+                <div id="drawer-references-container" class="space-y-2"></div>
+            </div>
+
+            <!-- Preferências -->
+            <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-3 text-xs">
+                <h4 class="font-bold text-slate-200 uppercase tracking-wider text-[11px]">Preferências do Mapeamento</h4>
+                <div class="grid grid-cols-2 gap-4 text-slate-400">
+                    <div>Idiomas: <span id="pref-lang" class="text-slate-200 font-semibold">Geral</span></div>
+                    <div>Acesso Aberto: <span id="pref-oa" class="text-slate-200 font-semibold">Sim</span></div>
+                    <div>Período: <span id="pref-years" class="text-slate-200 font-semibold">2020-2024</span></div>
+                    <div>Sugestões: <span id="pref-count" class="text-slate-200 font-semibold">5</span></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- ===================================================================== -->
+    <!-- JAVASCRIPT & LÓGICA INTERATIVA DA APLICAÇÃO                           -->
+    <!-- ===================================================================== -->
+    <script>
+        // BASE DE DADOS COMPLETA
+        const recommendationsData = [
+            {
+                artigo_id: "artigo-001",
+                label_curto: "Pesquisa 1 - Computação para Meninas",
+                titulo: "Introdução à Ciência da Computação para Meninas",
+                resumo: "Relato de oficinas para meninas do Ensino Fundamental II, com atividades desplugadas e digitais focado no incentivo à entrada em carreiras STEM.",
+                objetivo_pesquisa: "Investigar como oficinas práticas adaptadas podem despertar interesse pela computação e mitigar estereótipos de gênero.",
+                autores: ["Dra. Ana Paula Silva", "Dra. Maria Oliveira"],
+                ano: 2024,
+                citacoes: 84,
+                relacionamentos: 98,
+                abnt: "SILVA, Ana Paula; OLIVEIRA, Maria. Introdução à Ciência da Computação para Meninas. Revista Brasileira de Educação em Computação, 2024.",
+                open_access: true,
+                gender_composition: { mulheres: 100, homens: 0 },
+                metrics: { similarity: 98, problem_fit: 95, freshness: 99, openalex_relevance: 92, complementarity: 88, reliability: 96 },
+                topicos: [
+                    { id: "T1", tema: "Pensamento Computacional Inclusivo", descricao: "Atividades computacionais adaptadas para estudantes da educação básica.", palavras_chave: ["pensamento computacional", "meninas", "STEM"], finalidade: "trabalhos_relacionados" },
+                    { id: "T2", tema: "Avaliação de Retenção", descricao: "Análise quantitativa e qualitativa do impacto pós-oficina.", palavras_chave: ["retencao", "carreiras", "equidade"], finalidade: "metodo" }
+                ],
+                referencias_existentes: [
+                    { doi: "10.1145/3328778", openalex_id: "W295321", titulo: "Gender Gap in STEM: Early Interventions", autores: ["Carla Mendes"], ano: 2022 }
+                ],
+                preferencias: { idiomas: ["pt", "en"], ano_inicial: 2020, ano_final: 2024, somente_acesso_aberto: true, quantidade_sugestoes: 5 }
+            },
+            {
+                artigo_id: "artigo-002",
+                label_curto: "Pesquisa 2 - Auditar Vieses em IA",
+                titulo: "Mitigação de Vieses Algorítmicos com Foco em Equidade de Gênero",
+                resumo: "Proposta de framework para auditoria semântica em dados de treinamento de grandes modelos de linguagem (LLMs).",
+                objetivo_pesquisa: "Desenvolver métricas estatísticas para identificar e quantificar estereótipos em representações vetoriais de gênero.",
+                autores: ["Dra. Beatris Santos", "Prof. Roberto Lima", "Dra. Elena Rostova"],
+                ano: 2023,
+                citacoes: 142,
+                relacionamentos: 92,
+                abnt: "SANTOS, Beatris; LIMA, Roberto; ROSTOVA, Elena. Mitigação de Vieses Algorítmicos com Foco em Equidade de Gênero. Jornal de IA Ética, 2023.",
+                open_access: false,
+                gender_composition: { mulheres: 67, homens: 33 },
+                metrics: { similarity: 92, problem_fit: 90, freshness: 88, openalex_relevance: 95, complementarity: 91, reliability: 94 },
+                topicos: [
+                    { id: "T1", tema: "Auditoria Algorítmica Semântica", descricao: "Inspeção sistemática de embeddings e representações latentes.", palavras_chave: ["vies de genero", "IA etica", "auditoria"], finalidade: "fundamentacao" }
+                ],
+                referencias_existentes: [
+                    { doi: null, openalex_id: null, titulo: "Fairness in Machine Learning Systems", autores: ["Lucia Fernandez"], ano: 2021 }
+                ],
+                preferencias: { idiomas: ["pt"], ano_inicial: 2021, ano_final: 2023, somente_acesso_aberto: false, quantidade_sugestoes: 5 }
+            },
+            {
+                artigo_id: "artigo-003",
+                label_curto: "Pesquisa 3 - Biotecnologia & Liderança",
+                titulo: "Engenharia de Tecidos e Liderança Feminina na Biotecnologia",
+                resumo: "Estudo translacional de biomateriais poliméricos aplicado à regeneração celular conduzido por equipes com liderança feminina.",
+                objetivo_pesquisa: "Analisar a viabilidade celular de matrizes 3D e catalogar indicadores de produção patenteada por pesquisadoras.",
+                autores: ["Dra. Camila Nogueira", "Dra. Juliana Prado"],
+                ano: 2022,
+                citacoes: 210,
+                relacionamentos: 89,
+                abnt: "NOGUEIRA, Camila; PRADO, Juliana. Engenharia de Tecidos e Liderança Feminina na Biotecnologia. Biotecnologia Hoje, 2022.",
+                open_access: true,
+                gender_composition: { mulheres: 100, homens: 0 },
+                metrics: { similarity: 89, problem_fit: 85, freshness: 80, openalex_relevance: 90, complementarity: 94, reliability: 98 },
+                topicos: [
+                    { id: "T1", tema: "Biomateriais de Alta Regeneração", descricao: "Scaffolds poliméricos sintéticos para cultura celular.", palavras_chave: ["scaffolds 3d", "biotecnologia", "propriedade intelectual"], finalidade: "metodo" }
+                ],
+                referencias_existentes: [],
+                preferencias: { idiomas: ["pt"], ano_inicial: 2018, ano_final: 2023, somente_acesso_aberto: true, quantidade_sugestoes: 5 }
+            },
+            {
+                artigo_id: "artigo-004",
+                label_curto: "Pesquisa 4 - Robótica Pedagógica",
+                titulo: "Robótica Educacional e Inclusão de Autoras no Ensino de Exatas",
+                resumo: "Plataformas robóticas abertas de baixo custo aplicadas para incentivar o engajamento ativo de estudantes do sexo feminino.",
+                objetivo_pesquisa: "Avaliar o impacto da construção de hardware aberto no desempenho e motivação em exatas.",
+                autores: ["Dra. Fernanda Ramos", "Dra. Patricia Kelly", "Prof. Carlos Duarte"],
+                ano: 2024,
+                citacoes: 65,
+                relacionamentos: 94,
+                abnt: "RAMOS, Fernanda; KELLY, Patricia; DUARTE, Carlos. Robótica Educacional e Inclusão de Autoras no Ensino de Exatas. Anais de Robótica, 2024.",
+                open_access: true,
+                gender_composition: { mulheres: 67, homens: 33 },
+                metrics: { similarity: 94, problem_fit: 92, freshness: 97, openalex_relevance: 88, complementarity: 90, reliability: 92 },
+                topicos: [
+                    { id: "T1", tema: "Hardware Livre na Educação", descricao: "Placas e kits de prototipagem acessíveis para sala de aula.", palavras_chave: ["robotica", "hardware livre", "inclusao"], finalidade: "metodo" }
+                ],
+                referencias_existentes: [],
+                preferencias: { idiomas: ["pt"], ano_inicial: 2021, ano_final: 2024, somente_acesso_aberto: true, quantidade_sugestoes: 5 }
+            },
+            {
+                artigo_id: "artigo-005",
+                label_curto: "Pesquisa 5 - Ontologias de Dados Abertos",
+                titulo: "Arquiteturas de Dados Abertos e Visibilidade de Gênero na Ciência",
+                resumo: "Indexação semântica e ontologias de dados para contornar disparidades históricas de citações em repositórios abertos.",
+                objetivo_pesquisa: "Mapear redes de citação global e propor algoritmos de recomendação imparciais.",
+                autores: ["Dra. Vanessa Martins", "Dra. Renata Vasconcelos"],
+                ano: 2023,
+                citacoes: 118,
+                relacionamentos: 91,
+                abnt: "MARTINS, Vanessa; VASCONCELOS, Renata. Arquiteturas de Dados Abertos e Visibilidade de Gênero na Ciência. Data Science Journal, 2023.",
+                open_access: true,
+                gender_composition: { mulheres: 100, homens: 0 },
+                metrics: { similarity: 91, problem_fit: 88, freshness: 90, openalex_relevance: 96, complementarity: 93, reliability: 95 },
+                topicos: [
+                    { id: "T1", tema: "Grafos de Conhecimento Científico", descricao: "Modelagem ontológica para descoberta de autorias sub-representadas.", palavras_chave: ["ontologia", "dados abertos", "visibilidade"], finalidade: "fundamentacao" }
+                ],
+                referencias_existentes: [],
+                preferencias: { idiomas: ["en"], ano_inicial: 2020, ano_final: 2023, somente_acesso_aberto: true, quantidade_sugestoes: 5 }
+            }
+        ];
+
+        // ESTADOS DA APLICAÇÃO
+        let savedBookmarks = [];
+        let selectedPaperIds = ["artigo-001", "artigo-002", "artigo-003"];
+        let genderPieChart = null;
+        let chartInstances = {};
+
+        let metricChartTypes = {
+            similarity: 'radar',
+            problem_fit: 'doughnut',
+            freshness: 'bar',
+            openalex_relevance: 'polarArea',
+            complementarity: 'horizontalBar',
+            reliability: 'doughnut'
+        };
+
+        // TROCA DE VIEWS/ABAS
+        function switchView(viewId) {
+            document.getElementById('view-results').classList.add('hidden');
+            document.getElementById('view-compare').classList.add('hidden');
+            document.getElementById('view-pdf').classList.add('hidden');
+
+            const btnResults = document.getElementById('nav-btn-results');
+            const btnCompare = document.getElementById('nav-btn-compare');
+            const btnPdf = document.getElementById('nav-btn-pdf');
+
+            const inactiveStyle = "px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 text-slate-400 hover:text-white";
+            
+            btnResults.className = inactiveStyle;
+            btnCompare.className = inactiveStyle;
+            btnPdf.className = inactiveStyle;
+
+            if (viewId === 'results') {
+                document.getElementById('view-results').classList.remove('hidden');
+                btnResults.className = "px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-purple-800 text-white shadow-md";
+            } else if (viewId === 'compare') {
+                document.getElementById('view-compare').classList.remove('hidden');
+                btnCompare.className = "px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-amber-700 text-slate-950 shadow-md font-bold";
+                renderPaperSelectors();
+                renderAllComparisonCharts();
+            } else if (viewId === 'pdf') {
+                document.getElementById('view-pdf').classList.remove('hidden');
+                btnPdf.className = "px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 bg-gradient-to-r from-rose-600 to-rose-800 text-white shadow-md";
+            }
+        }
+
+        // LÓGICA DE FILTRAGEM E ORDENAÇÃO
+        function applyFiltersAndSort() {
+            const searchTerm = document.getElementById('filter-search').value.toLowerCase();
+            const onlyOA = document.getElementById('filter-oa').checked;
+            const onlyFemale = document.getElementById('filter-female').checked;
+            const minYear = parseInt(document.getElementById('filter-year').value);
+            const sortBy = document.getElementById('sort-select').value;
+
+            let filtered = recommendationsData.filter(item => {
+                const matchesSearch = item.titulo.toLowerCase().includes(searchTerm) ||
+                                      item.resumo.toLowerCase().includes(searchTerm) ||
+                                      item.autores.some(a => a.toLowerCase().includes(searchTerm)) ||
+                                      item.topicos.some(t => t.palavras_chave.some(k => k.toLowerCase().includes(searchTerm)));
+
+                const matchesOA = !onlyOA || item.open_access;
+                const matchesFemale = !onlyFemale || item.gender_composition.mulheres === 100;
+                const matchesYear = item.ano >= minYear;
+
+                return matchesSearch && matchesOA && matchesFemale && matchesYear;
+            });
+
+            if (sortBy === 'score') filtered.sort((a,b) => b.relacionamentos - a.relacionamentos);
+            if (sortBy === 'year') filtered.sort((a,b) => b.ano - a.ano);
+            if (sortBy === 'citations') filtered.sort((a,b) => b.citacoes - a.citacoes);
+
+            document.getElementById('results-count').innerText = filtered.length;
+            renderRecommendationsList(filtered);
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-search').value = '';
+            document.getElementById('filter-oa').checked = false;
+            document.getElementById('filter-female').checked = false;
+            document.getElementById('filter-year').value = 2018;
+            document.getElementById('year-label').innerText = '2018';
+            document.getElementById('sort-select').value = 'score';
+            applyFiltersAndSort();
+        }
+
+        // RENDERIZADOR DOS CARDS NA VIEW RECOMENDAÇÕES
+        function renderRecommendationsList(items) {
+            const container = document.getElementById('recommendations-list');
+            container.innerHTML = '';
+
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-slate-900/60 border border-slate-800 p-12 rounded-3xl text-center space-y-3">
+                        <i class="fa-solid fa-filter-circle-xmark text-slate-600 text-4xl"></i>
+                        <h4 class="text-sm font-bold text-slate-300">Nenhum resultado encontrado</h4>
+                        <p class="text-xs text-slate-500">Tente ajustar os termos de busca ou diminuir os filtros na barra lateral.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            items.forEach(item => {
+                const isSaved = savedBookmarks.includes(item.artigo_id);
+                const keywords = item.topicos.flatMap(t => t.palavras_chave);
+
+                const card = document.createElement('article');
+                card.className = "bg-slate-900/80 border border-slate-800 hover:border-purple-500/50 rounded-3xl p-6 md:p-8 space-y-5 shadow-xl transition relative group";
+                
+                card.innerHTML = `
+                    <!-- Topo: Badges & Ações Rápidas -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <!-- Match Score Badge -->
+                            <span class="bg-gradient-to-r from-purple-900 to-fuchsia-900 text-purple-200 border border-purple-500/40 px-3 py-1 rounded-full text-xs font-black flex items-center space-x-1">
+                                <i class="fa-solid fa-bolt text-amber-300 text-[10px]"></i>
+                                <span>Match Semântico: ${item.relacionamentos}%</span>
+                            </span>
+
+                            ${item.open_access ? `
+                                <span class="bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold flex items-center space-x-1">
+                                    <i class="fa-solid fa-lock-open text-[10px]"></i>
+                                    <span>Open Access</span>
+                                </span>
+                            ` : ''}
+
+                            <span class="text-xs text-slate-400 font-semibold bg-slate-950 px-2.5 py-0.5 rounded-full border border-slate-800">
+                                ${item.ano}
+                            </span>
+                        </div>
+
+                        <!-- Citações & Bookmark -->
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-amber-400 font-bold bg-amber-950/50 border border-amber-500/30 px-3 py-1 rounded-full">
+                                <i class="fa-solid fa-quote-right mr-1"></i>${item.citacoes} citações
+                            </span>
+                            <button onclick="toggleBookmark('${item.artigo_id}')" class="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-amber-400 transition" title="Salvar Artigo">
+                                <i class="${isSaved ? 'fa-solid text-amber-400' : 'fa-regular'} fa-bookmark"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Título & Autoria -->
+                    <div class="space-y-2">
+                        <h3 class="text-lg md:text-xl font-black text-white leading-snug group-hover:text-purple-300 transition break-words">
+                            ${item.titulo}
+                        </h3>
+                        <p class="text-xs text-purple-300 font-semibold flex items-center space-x-2">
+                            <i class="fa-solid fa-user-graduate text-purple-400"></i>
+                            <span>${item.autores.join(' • ')}</span>
+                        </p>
+                    </div>
+
+                    <!-- Resumo Executivo -->
+                    <p class="text-xs text-slate-300 leading-relaxed break-words">${item.resumo}</p>
+
+                    <!-- PAINEL VISUAL RÁPIDO: SIMILARIDADE & COMPOSIÇÃO DE GÊNERO -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80">
+                        
+                        <!-- Barra 1: Score de Similaridade -->
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-[11px] font-bold">
+                                <span class="text-slate-400">Match de Conteúdo</span>
+                                <span class="text-purple-300">${item.relacionamentos}%</span>
+                            </div>
+                            <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-purple-600 to-fuchsia-500 rounded-full" style="width: ${item.relacionamentos}%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Barra 2: Proporção de Gênero (Mulheres x Homens) -->
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-[11px] font-bold">
+                                <span class="text-slate-400">Composição da Autoria</span>
+                                <span class="text-pink-400">${item.gender_composition.mulheres}% Feminina</span>
+                            </div>
+                            <div class="h-2 bg-slate-800 rounded-full overflow-hidden flex">
+                                <div class="h-full bg-pink-500" style="width: ${item.gender_composition.mulheres}%"></div>
+                                <div class="h-full bg-slate-600" style="width: ${item.gender_composition.homens}%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tags & Palavras-chave -->
+                    <div class="flex flex-wrap gap-1.5 pt-1">
+                        ${keywords.map(kw => `<span class="bg-purple-950/70 text-purple-200 border border-purple-800/40 text-[10px] font-semibold px-2.5 py-0.5 rounded-lg">#${kw}</span>`).join('')}
+                    </div>
+
+                    <!-- Rodapé do Card: Ações Principais -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/80">
+                        <button onclick="copyABNT('${item.abnt}')" class="text-xs text-slate-400 hover:text-white font-bold flex items-center space-x-2 transition">
+                            <i class="fa-regular fa-copy text-purple-400"></i>
+                            <span>Copiar Citação ABNT</span>
+                        </button>
+
+                        <button onclick="openDrawer('${item.artigo_id}')" class="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-purple-700 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md transition transform active:scale-95">
+                            <span>Análise Completa</span>
+                            <i class="fa-solid fa-arrow-right-long"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleBookmark(artigoId) {
+            if (savedBookmarks.includes(artigoId)) {
+                savedBookmarks = savedBookmarks.filter(id => id !== artigoId);
+                showToast("Artigo removido dos favoritos.");
+            } else {
+                savedBookmarks.push(artigoId);
+                showToast("Artigo salvo com sucesso!");
+            }
+            applyFiltersAndSort();
+        }
+
+        function copyABNT(text) {
+            navigator.clipboard.writeText(text);
+            showToast("Citação ABNT copiada para a área de transferência!");
+        }
+
+        // LÓGICA DO PAINEL COMPARATIVO DE PESQUISAS
+        function renderPaperSelectors() {
+            const container = document.getElementById('paper-selector-container');
+            container.innerHTML = '';
+
+            recommendationsData.forEach((paper) => {
+                const isSelected = selectedPaperIds.includes(paper.artigo_id);
+                const label = document.createElement('label');
+                label.className = `cursor-pointer flex items-center justify-between p-3 rounded-2xl border text-xs font-semibold transition ${
+                    isSelected ? 'bg-purple-950/60 border-purple-500/60 text-purple-200' : 'bg-slate-950/60 border-slate-800/80 text-slate-400 hover:text-slate-200'
+                }`;
+
+                label.innerHTML = `
+                    <div class="flex items-center space-x-2.5 truncate pr-2">
+                        <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="togglePaperSelection('${paper.artigo_id}')" class="accent-purple-500 rounded h-4 w-4 cursor-pointer">
+                        <span class="truncate">${paper.label_curto}</span>
+                    </div>
+                    <span class="text-[10px] font-mono text-slate-500">${paper.artigo_id}</span>
+                `;
+                container.appendChild(label);
+            });
+
+            document.getElementById('selection-counter-badge').innerText = `${selectedPaperIds.length} de 3 Selecionadas`;
+        }
+
+        function togglePaperSelection(artigoId) {
+            if (selectedPaperIds.includes(artigoId)) {
+                if (selectedPaperIds.length === 1) {
+                    showToast("Selecione ao menos 1 pesquisa para comparar.");
+                    renderPaperSelectors();
+                    return;
+                }
+                selectedPaperIds = selectedPaperIds.filter(id => id !== artigoId);
+            } else {
+                if (selectedPaperIds.length >= 3) {
+                    showToast("Você pode selecionar no máximo 3 pesquisas.");
+                    renderPaperSelectors();
+                    return;
+                }
+                selectedPaperIds.push(artigoId);
+            }
+            renderPaperSelectors();
+            renderAllComparisonCharts();
+        }
+
+        function changeMetricChartType(metricKey, newType) {
+            metricChartTypes[metricKey] = newType;
+            renderAllComparisonCharts();
+        }
+
+        function renderAllComparisonCharts() {
+            const activePapers = recommendationsData.filter(p => selectedPaperIds.includes(p.artigo_id));
+            const labels = activePapers.map(p => p.artigo_id);
+
+            const colorsList = [
+                { bg: 'rgba(124, 58, 237, 0.8)', border: '#7C3AED' },
+                { bg: 'rgba(245, 158, 11, 0.8)', border: '#F59E0B' },
+                { bg: 'rgba(217, 70, 239, 0.8)', border: '#D946EF' }
+            ];
+
+            const metrics = ['similarity', 'problem_fit', 'freshness', 'openalex_relevance', 'complementarity', 'reliability'];
+            
+            metrics.forEach(m => {
+                const values = activePapers.map(p => p.metrics[m]);
+                const chartType = metricChartTypes[m];
+                renderSingleMetricChart(`chart-${m}`, chartType, labels, values, colorsList);
+
+                if (activePapers.length > 0) {
+                    const topPaper = [...activePapers].sort((a,b) => b.metrics[m] - a.metrics[m])[0];
+                    document.getElementById(`winner-${m}`).innerText = `${topPaper.artigo_id} (${topPaper.metrics[m]}%)`;
+                }
+            });
+
+            renderGenderStackedChart('chart-gender', labels, activePapers);
+        }
+
+        function renderSingleMetricChart(canvasId, rawType, labels, dataValues, colors) {
+            if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            let chartType = rawType;
+            let indexAxis = 'x';
+
+            if (rawType === 'horizontalBar') {
+                chartType = 'bar';
+                indexAxis = 'y';
+            }
+
+            const isRadial = chartType === 'radar' || chartType === 'doughnut' || chartType === 'polarArea';
+
+            const dataset = {
+                data: dataValues,
+                backgroundColor: isRadial ? colors.map(c => c.bg) : colors[0].bg,
+                borderColor: isRadial ? colors.map(c => c.border) : colors[0].border,
+                borderWidth: 1,
+                borderRadius: chartType === 'bar' ? 6 : 0,
+                fill: chartType === 'line'
+            };
+
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: chartType,
+                data: { labels: labels, datasets: [dataset] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: indexAxis,
+                    plugins: { legend: { display: isRadial } },
+                    scales: !isRadial ? {
+                        y: indexAxis === 'x' ? { beginAtZero: true, max: 100, ticks: { color: '#94A3B8', font: { size: 9 } }, grid: { color: '#1E293B' } } : { ticks: { color: '#94A3B8', font: { size: 9 } } },
+                        x: indexAxis === 'y' ? { beginAtZero: true, max: 100, ticks: { color: '#94A3B8', font: { size: 9 } }, grid: { color: '#1E293B' } } : { ticks: { color: '#94A3B8', font: { size: 9 } } }
+                    } : (chartType === 'radar' ? { r: { angleLines: { color: '#1E293B' }, grid: { color: '#1E293B' }, ticks: { display: false } } } : {})
+                }
+            });
+        }
+
+        function renderGenderStackedChart(canvasId, labels, items) {
+            if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+            const ctx = document.getElementById(canvasId).getContext('2d');
+
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Mulheres (%)', data: items.map(d => d.gender_composition.mulheres), backgroundColor: '#EC4899', borderRadius: 6 },
+                        { label: 'Homens (%)', data: items.map(d => d.gender_composition.homens), backgroundColor: '#334155', borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true, ticks: { color: '#94A3B8' }, grid: { color: '#1E293B' } },
+                        y: { stacked: true, max: 100, ticks: { color: '#94A3B8' }, grid: { color: '#1E293B' } }
+                    },
+                    plugins: { legend: { labels: { color: '#F8FAFC', font: { size: 10 } } } }
+                }
+            });
+        }
+
+        // LÓGICA DO DRAWER LATERAL (FORMATO CONTINUO INTEGRAL)
+        function openDrawer(artigoId) {
+            const data = recommendationsData.find(item => item.artigo_id === artigoId);
+            if (!data) return;
+
+            document.getElementById('drawer-id-badge').innerText = data.artigo_id;
+            document.getElementById('drawer-title').innerText = data.titulo;
+            document.getElementById('drawer-abstract').innerText = data.resumo;
+            document.getElementById('drawer-objective').innerText = data.objetivo_pesquisa;
+
+            const topicsContainer = document.getElementById('drawer-topics-container');
+            topicsContainer.innerHTML = '';
+            data.topicos.forEach(t => {
+                const topicEl = document.createElement('div');
+                topicEl.className = "bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2";
+                topicEl.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-purple-300">[${t.id}] ${t.tema}</span>
+                        <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded uppercase font-mono">${t.finalidade}</span>
+                    </div>
+                    <p class="text-xs text-slate-400">${t.descricao}</p>
+                    <div class="flex flex-wrap gap-1.5 pt-1">
+                        ${t.palavras_chave.map(kw => `<span class="bg-purple-950 text-purple-200 border border-purple-800 text-[10px] px-2 py-0.5 rounded-md">#${kw}</span>`).join('')}
+                    </div>
+                `;
+                topicsContainer.appendChild(topicEl);
+            });
+
+            const refContainer = document.getElementById('drawer-references-container');
+            refContainer.innerHTML = '';
+            if (data.referencias_existentes.length === 0) {
+                refContainer.innerHTML = `<p class="text-xs text-slate-500 italic">Nenhuma referência previamente cadastrada.</p>`;
+            } else {
+                data.referencias_existentes.forEach(r => {
+                    const refEl = document.createElement('div');
+                    refEl.className = "bg-slate-950/60 p-3 rounded-xl border border-slate-800 text-xs space-y-1";
+                    refEl.innerHTML = `
+                        <p class="font-semibold text-slate-200">${r.titulo} (${r.ano})</p>
+                        <p class="text-[11px] text-slate-400">Autoria: ${r.autores.join(', ')}</p>
+                    `;
+                    refContainer.appendChild(refEl);
+                });
+            }
+
+            document.getElementById('pref-lang').innerText = data.preferencias.idiomas.length ? data.preferencias.idiomas.join(', ') : 'Geral';
+            document.getElementById('pref-oa').innerText = data.preferencias.somente_acesso_aberto ? 'Sim' : 'Não Restrito';
+            document.getElementById('pref-years').innerText = (data.preferencias.ano_inicial && data.preferencias.ano_final) ? `${data.preferencias.ano_inicial} - ${data.preferencias.ano_final}` : 'Livre';
+            document.getElementById('pref-count').innerText = data.preferencias.quantidade_sugestoes;
+
+            renderGenderPieChart(data.gender_composition);
+
+            const drawer = document.getElementById('detail-drawer');
+            const overlay = document.getElementById('drawer-overlay');
+            const panel = document.getElementById('drawer-panel');
+
+            drawer.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                panel.classList.remove('translate-x-full');
+            }, 10);
+        }
+
+        function closeDrawer() {
+            const overlay = document.getElementById('drawer-overlay');
+            const panel = document.getElementById('drawer-panel');
+
+            overlay.classList.add('opacity-0');
+            panel.classList.add('translate-x-full');
+            setTimeout(() => {
+                document.getElementById('detail-drawer').classList.add('hidden');
+            }, 300);
+        }
+
+        function renderGenderPieChart(comp) {
+            document.getElementById('female-percentage-text').innerText = `${comp.mulheres}% Autoras Femininas`;
+            const ctx = document.getElementById('chart-gender-pie').getContext('2d');
+            if (genderPieChart) genderPieChart.destroy();
+
+            genderPieChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Mulheres', 'Homens'],
+                    datasets: [{
+                        data: [comp.mulheres, comp.homens],
+                        backgroundColor: ['#EC4899', '#334155'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#F8FAFC', font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-notification');
+            document.getElementById('toast-message').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+
+        // ================================================================
+        // PDF + RECOMENDAÇÕES DE CITAÇÃO
+        // Os dados abaixo são MOCK. O backend poderá substituir
+        // pdfAnalysisData por JSON com a mesma estrutura.
+        // ================================================================
+
+        const pdfAnalysisData = {
+            titulo: "Introdução à Ciência da Computação para Meninas",
+            paginas: [
+                {
+                    numero: 1,
+                    paragrafos: [
+                        { id: "P1", texto: "A participação feminina na área de tecnologia continua sendo um desafio relevante para instituições de ensino. A baixa representação de meninas em atividades relacionadas à computação pode estar associada a fatores sociais, educacionais e culturais." },
+                        { id: "P2", texto: "Intervenções realizadas ainda durante a educação básica podem contribuir para aproximar estudantes do campo da computação. Oficinas práticas, atividades colaborativas e experiências de programação são estratégias utilizadas para apresentar possibilidades profissionais e reduzir barreiras de entrada." },
+                        { id: "P3", texto: "Nesse contexto, iniciativas voltadas especificamente para meninas podem criar ambientes de aprendizagem nos quais elas tenham contato com a tecnologia e possam desenvolver maior confiança para participar de atividades relacionadas à área." }
+                    ]
+                },
+                {
+                    numero: 2,
+                    paragrafos: [
+                        { id: "P4", texto: "O presente estudo investiga uma intervenção educacional baseada em oficinas práticas de computação. A proposta combina atividades desplugadas e digitais, permitindo que estudantes tenham contato com diferentes conceitos sem depender exclusivamente de conhecimentos prévios de programação." },
+                        { id: "P5", texto: "A avaliação da intervenção considera o interesse demonstrado pelas participantes, a percepção sobre a computação e a intenção de seguir aprendendo conteúdos relacionados à tecnologia após a realização das atividades." },
+                        { id: "P6", texto: "Além da dimensão técnica, a pesquisa considera aspectos relacionados à percepção das estudantes sobre estereótipos de gênero presentes no campo da tecnologia." }
+                    ]
+                },
+                {
+                    numero: 3,
+                    paragrafos: [
+                        { id: "P7", texto: "Os resultados indicam mudanças positivas na percepção das participantes em relação à computação após as oficinas. As atividades também permitiram observar diferentes níveis de interesse e participação ao longo da intervenção." },
+                        { id: "P8", texto: "Os achados reforçam a importância de estratégias educacionais que apresentem a computação de maneira acessível e contextualizada para estudantes da educação básica." },
+                        { id: "P9", texto: "Como trabalhos futuros, recomenda-se acompanhar as participantes por períodos mais longos para verificar se o contato inicial com a computação influencia escolhas educacionais e profissionais posteriores." }
+                    ]
+                }
+            ],
+            citations: [
+                {
+                    id: "C1", page: 1, paragraph_id: "P2",
+                    anchor: "Intervenções realizadas ainda durante a educação básica podem contribuir para aproximar estudantes do campo da computação.",
+                    quote: "Oficinas práticas, atividades colaborativas e experiências de programação são estratégias utilizadas para apresentar possibilidades profissionais e reduzir barreiras de entrada.",
+                    reason: "O artigo candidato apresenta oficinas práticas para meninas do Ensino Fundamental II e investiga seu potencial para incentivar a entrada em carreiras STEM. Por isso, ele pode fundamentar a afirmação sobre intervenções educacionais realizadas durante a educação básica.",
+                    color: "purple", label: "Fundamentação da intervenção"
+                },
+                {
+                    id: "C2", page: 1, paragraph_id: "P3",
+                    anchor: "iniciativas voltadas especificamente para meninas podem criar ambientes de aprendizagem",
+                    quote: "iniciativas voltadas especificamente para meninas podem criar ambientes de aprendizagem nos quais elas tenham contato com a tecnologia",
+                    reason: "O resumo do artigo candidato descreve uma intervenção direcionada a meninas e voltada ao incentivo à participação em STEM. A relação temática é direta com este trecho.",
+                    color: "pink", label: "Contextualização"
+                },
+                {
+                    id: "C3", page: 2, paragraph_id: "P6",
+                    anchor: "estereótipos de gênero presentes no campo da tecnologia",
+                    quote: "a pesquisa considera aspectos relacionados à percepção das estudantes sobre estereótipos de gênero presentes no campo da tecnologia.",
+                    reason: "O artigo candidato investiga como oficinas podem despertar o interesse pela computação e mitigar estereótipos de gênero, tornando-o uma referência complementar para esta discussão.",
+                    color: "amber", label: "Discussão sobre gênero"
+                },
+                {
+                    id: "C4", page: 3, paragraph_id: "P8",
+                    anchor: "estratégias educacionais que apresentem a computação de maneira acessível",
+                    quote: "Os achados reforçam a importância de estratégias educacionais que apresentem a computação de maneira acessível e contextualizada para estudantes da educação básica.",
+                    reason: "A descrição do artigo candidato informa que foram utilizadas atividades desplugadas e digitais com meninas do Ensino Fundamental II. Isso fornece uma referência compatível com a discussão sobre estratégias educacionais acessíveis.",
+                    color: "cyan", label: "Apoio aos resultados"
+                }
+            ]
+        };
+
+        let currentPdfPage = 1;
+        let pdfZoom = 1;
+
+        const citationColorMap = {
+            purple: { bg: "rgba(139,92,246,.30)", border: "#8B5CF6", soft: "rgba(139,92,246,.10)" },
+            pink:   { bg: "rgba(236,72,153,.30)", border: "#EC4899", soft: "rgba(236,72,153,.10)" },
+            amber:  { bg: "rgba(245,158,11,.32)", border: "#F59E0B", soft: "rgba(245,158,11,.10)" },
+            cyan:   { bg: "rgba(6,182,212,.30)", border: "#06B6D4", soft: "rgba(6,182,212,.10)" }
+        };
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function escapeRegExp(value) {
+            return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        }
+
+        function renderPdfAnalysis(data = pdfAnalysisData) {
+            document.getElementById("pdf-document-title").innerText = data.titulo;
+            document.getElementById("pdf-paper-title").innerText = data.titulo;
+            document.getElementById("citation-count").innerText =
+                `${data.citations.length} ${data.citations.length === 1 ? "local" : "locais"}`;
+
+            renderPdfPage(currentPdfPage, data);
+            renderCitationRecommendations(data);
+        }
+
+        function renderPdfPage(pageNumber, data = pdfAnalysisData) {
+            const page = data.paginas.find(p => p.numero === pageNumber);
+            if (!page) return;
+
+            currentPdfPage = pageNumber;
+            const content = document.getElementById("pdf-page-content");
+
+            content.innerHTML = page.paragrafos.map(paragraph => {
+                let html = escapeHtml(paragraph.texto);
+
+                data.citations
+                    .filter(c => c.page === pageNumber && c.paragraph_id === paragraph.id)
+                    .forEach(citation => {
+                        const color = citationColorMap[citation.color] || citationColorMap.purple;
+                        const regex = new RegExp(escapeRegExp(citation.anchor), "gi");
+
+                        html = html.replace(regex, match => `
+                            <mark id="citation-anchor-${citation.id}"
+                                  onclick="focusCitation('${citation.id}')"
+                                  class="pdf-citation-highlight cursor-pointer rounded px-1 py-0.5"
+                                  style="background:${color.bg};box-shadow:inset 0 -2px 0 ${color.border};"
+                                  title="Clique para ver a justificativa">
+                                ${match}
+                            </mark>
+                        `);
+                    });
+
+                return `<p id="paragraph-${paragraph.id}" class="pdf-paragraph">${html}</p>`;
+            }).join("");
+
+            document.getElementById("pdf-page-indicator").innerText =
+                `Página ${pageNumber} de ${data.paginas.length}`;
+            document.getElementById("pdf-footer-page").innerText = pageNumber;
+            applyPdfZoom();
+        }
+
+        function renderCitationRecommendations(data = pdfAnalysisData) {
+            const container = document.getElementById("citation-recommendations");
+
+            container.innerHTML = data.citations.map(citation => {
+                const color = citationColorMap[citation.color] || citationColorMap.purple;
+
+                return `
+                    <article id="citation-card-${citation.id}"
+                             onclick="focusCitation('${citation.id}')"
+                             class="citation-card group cursor-pointer bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg transition-all duration-200"
+                             style="--citation-color:${color.border};--citation-soft:${color.soft};">
+                        <div class="flex items-start gap-3">
+                            <div class="h-9 w-9 rounded-xl shrink-0 flex items-center justify-center font-black text-xs"
+                                 style="background:${color.soft};color:${color.border};border:1px solid ${color.border}55;">
+                                ${citation.id.replace("C", "")}
+                            </div>
+
+                            <div class="min-w-0 flex-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="text-[10px] uppercase tracking-wider font-black px-2 py-1 rounded-md"
+                                          style="background:${color.soft};color:${color.border};">
+                                        ${citation.label}
+                                    </span>
+                                    <span class="text-[10px] text-slate-500 font-mono">
+                                        Pág. ${citation.page} · ${citation.paragraph_id}
+                                    </span>
+                                </div>
+
+                                <h4 class="text-sm font-bold text-white mt-3">Onde inserir</h4>
+                                <p class="text-[11px] leading-relaxed text-slate-300 mt-1.5">
+                                    "${escapeHtml(citation.quote)}"
+                                </p>
+
+                                <div class="mt-4 p-3 rounded-xl border"
+                                     style="background:${color.soft};border-color:${color.border}35;">
+                                    <div class="flex items-center gap-2 mb-1.5">
+                                        <i class="fa-solid fa-lightbulb text-[10px]" style="color:${color.border};"></i>
+                                        <span class="text-[10px] uppercase tracking-wider font-black" style="color:${color.border};">
+                                            Por que citar aqui?
+                                        </span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-300 leading-relaxed">
+                                        ${escapeHtml(citation.reason)}
+                                    </p>
+                                </div>
+
+                                <div class="mt-3 flex items-center justify-between">
+                                    <span class="text-[10px] text-slate-500">
+                                        <i class="fa-solid fa-location-dot mr-1"></i> Ir para o trecho
+                                    </span>
+                                    <i class="fa-solid fa-arrow-right text-[10px] text-slate-600 group-hover:text-slate-300 transition"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                `;
+            }).join("");
+        }
+
+        function focusCitation(citationId) {
+            const citation = pdfAnalysisData.citations.find(c => c.id === citationId);
+            if (!citation) return;
+
+            if (currentPdfPage !== citation.page) {
+                renderPdfPage(citation.page, pdfAnalysisData);
+                document.getElementById("pdf-scroll-area").scrollTo({ top: 0, behavior: "smooth" });
+            }
+
+            document.querySelectorAll(".citation-card").forEach(card => {
+                card.classList.remove("ring-2", "ring-offset-2", "ring-offset-slate-950");
+                card.style.boxShadow = "";
+            });
+
+            const card = document.getElementById(`citation-card-${citationId}`);
+            if (card) {
+                card.classList.add("ring-2", "ring-offset-2", "ring-offset-slate-950");
+                card.style.setProperty("--tw-ring-color", citationColorMap[citation.color].border);
+            }
+
+            setTimeout(() => {
+                const mark = document.getElementById(`citation-anchor-${citationId}`);
+                if (!mark) return;
+
+                mark.scrollIntoView({ behavior: "smooth", block: "center" });
+                mark.classList.add("citation-pulse");
+
+                setTimeout(() => mark.classList.remove("citation-pulse"), 1600);
+            }, 100);
+        }
+
+        function changePdfPage(direction) {
+            const newPage = currentPdfPage + direction;
+            if (newPage < 1 || newPage > pdfAnalysisData.paginas.length) return;
+
+            renderPdfPage(newPage, pdfAnalysisData);
+            document.getElementById("pdf-scroll-area").scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        function zoomPdf(amount) {
+            pdfZoom = Math.min(1.5, Math.max(.7, pdfZoom + amount));
+            applyPdfZoom();
+        }
+
+        function applyPdfZoom() {
+            const page = document.getElementById("pdf-page");
+            document.getElementById("pdf-zoom-label").innerText = `${Math.round(pdfZoom * 100)}%`;
+            page.style.transform = `scale(${pdfZoom})`;
+            page.style.marginBottom = `${(pdfZoom - 1) * 1040}px`;
+        }
+
+        // INICIALIZAÇÃO
+        document.addEventListener('DOMContentLoaded', () => {
+            applyFiltersAndSort();
+            renderPdfAnalysis(pdfAnalysisData);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CitaDelas — Visibilidade e Equidade de Gênero na Ciência</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            purple: '#4A154B',
+                            lightpurple: '#6B21A8',
+                            pink: '#EC4899',
+                            darkpink: '#DB2777',
+                            amber: '#F59E0B',
+                            slate: '#0F172A',
+                            card: '#1E293B',
+                            lightbg: '#F8FAFC'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Academic & UI Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0B0F19;
+            color: #F8FAFC;
+        }
+        .citation-font {
+            font-family: 'Merriweather', serif;
+        }
+        .break-words-custom {
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            hyphens: auto;
+        }
+        .ambient-mesh {
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(124, 58, 237, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 25%, rgba(217, 70, 239, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 50% 75%, rgba(245, 158, 11, 0.08) 0%, transparent 50%);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B0F19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7C3AED;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float {
+            animation: float 5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#0B0F19] text-slate-100 antialiased selection:bg-purple-600 selection:text-white ambient-mesh">
+
+    <!-- FLOATING GLASSMORPHISM HEADER -->
+    <div class="sticky top-4 z-50 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 my-2">
+        <header class="bg-slate-900/80 backdrop-blur-xl border border-purple-500/20 rounded-2xl px-5 py-3.5 shadow-2xl shadow-purple-950/40 flex items-center justify-between gap-4">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center space-x-3.5 cursor-pointer" onclick="switchTab('search')">
+                <div class="h-11 w-11 rounded-xl bg-gradient-to-br from-purple-600 via-fuchsia-600 to-amber-500 flex items-center justify-center shadow-lg shadow-purple-600/30 ring-1 ring-white/20 hover:scale-105 transition transform">
+                    <i class="fa-solid font-bold text-white text-xl fa-quote-left"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-2xl font-black tracking-tight text-white bg-clip-text text-transparent bg-gradient-to-r from-purple-200 via-fuchsia-200 to-amber-200">
+                            CitaDelas
+                        </span>
+                        <span class="relative flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 hidden md:block font-medium">
+                        Plataforma de Visibilidade e Equidade Científica
+                    </p>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex items-center space-x-1 bg-slate-950/60 p-1.5 rounded-xl border border-slate-800/80">
+                <button id="nav-search" onclick="switchTab('search')" class="nav-btn flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all bg-gradient-to-r from-purple-900/80 to-fuchsia-900/80 text-white border border-purple-500/40 shadow-sm">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                    <span>Recomendador</span>
+                </button>
+                <button id="nav-directory" onclick="switchTab('directory')" class="nav-btn flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800/60">
+                    <i class="fa-solid fa-users text-slate-400"></i>
+                    <span>Pesquisadoras</span>
+                </button>
+                <button id="nav-stats" onclick="switchTab('stats')" class="nav-btn flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800/60">
+                    <i class="fa-solid fa-chart-line text-slate-400"></i>
+                    <span>Métricas</span>
+                </button>
+                <button id="nav-about" onclick="switchTab('about')" class="nav-btn flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800/60">
+                    <i class="fa-solid fa-circle-info text-slate-400"></i>
+                    <span>Sobre</span>
+                </button>
+            </nav>
+
+            <!-- Saved Papers Trigger -->
+            <button onclick="toggleSavedDrawer()" class="relative flex items-center space-x-2.5 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-amber-300 border border-amber-500/30 hover:border-amber-500/60 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-md">
+                <i class="fa-solid fa-bookmark text-amber-400"></i>
+                <span class="hidden sm:inline">Minhas Citações</span>
+                <span id="saved-counter" class="bg-purple-600 text-white text-[11px] font-black px-2 py-0.5 rounded-full shadow-sm">0</span>
+            </button>
+        </header>
+
+        <!-- Mobile Navigation Bar -->
+        <nav class="md:hidden flex items-center justify-around bg-slate-900/90 border border-slate-800 rounded-xl mt-2 p-1.5 shadow-lg">
+            <button onclick="switchTab('search')" class="p-2 text-xs font-medium text-slate-300 hover:text-white flex flex-col items-center">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-400 text-sm mb-1"></i>
+                <span>Recomendar</span>
+            </button>
+            <button onclick="switchTab('directory')" class="p-2 text-xs font-medium text-slate-300 hover:text-white flex flex-col items-center">
+                <i class="fa-solid fa-users text-purple-400 text-sm mb-1"></i>
+                <span>Autoras</span>
+            </button>
+            <button onclick="switchTab('stats')" class="p-2 text-xs font-medium text-slate-300 hover:text-white flex flex-col items-center">
+                <i class="fa-solid fa-chart-line text-fuchsia-400 text-sm mb-1"></i>
+                <span>Métricas</span>
+            </button>
+            <button onclick="switchTab('about')" class="p-2 text-xs font-medium text-slate-300 hover:text-white flex flex-col items-center">
+                <i class="fa-solid fa-circle-info text-slate-400 text-sm mb-1"></i>
+                <span>Sobre</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 space-y-20">
+
+        <!-- TAB 1: RECOMENDADOR INTELIGENTE -->
+        <section id="tab-search" class="tab-content space-y-16">
+            
+            <!-- HERO BANNER DESIGN -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-purple-950/60 to-slate-900 p-8 md:p-14 border border-purple-500/30 shadow-2xl space-y-10">
+                <div class="absolute -top-32 -right-32 w-96 h-96 bg-fuchsia-600/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center relative z-10">
+                    
+                    <!-- Left Hero Content -->
+                    <div class="lg:col-span-7 space-y-6 text-left">
+                        <div class="inline-flex items-center space-x-2 bg-purple-950/80 text-purple-200 border border-purple-500/40 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide shadow-sm">
+                            <span class="h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
+                            <i class="fa-solid fa-award text-amber-400"></i>
+                            <span>Ciência & Equidade de Gênero</span>
+                        </div>
+
+                        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+                            Encontre e cite referências de <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-fuchsia-300 to-amber-300">pesquisadoras expoentes</span> na sua área.
+                        </h1>
+
+                        <p class="text-slate-300 text-sm sm:text-base leading-relaxed font-normal max-w-2xl">
+                            Envie o PDF do seu artigo ou preencha as informações do manuscrito para que o assistente CitaDelas mapeie produções acadêmicas relevantes lideradas por mulheres.
+                        </p>
+
+                        <div class="pt-2 flex flex-wrap items-center gap-6 text-xs text-slate-400">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-check text-emerald-400"></i>
+                                <span>Exportação ABNT, APA, IEEE e BibTeX</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-check text-emerald-400"></i>
+                                <span>Base com +15.000 Artigos</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Hero Interactive Showcase Card -->
+                    <div class="lg:col-span-5">
+                        <div class="relative bg-slate-900/90 border border-purple-500/30 rounded-2xl p-6 shadow-2xl backdrop-blur-md space-y-5 animate-float">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-amber-400 flex items-center space-x-1.5">
+                                    <i class="fa-solid fa-star"></i>
+                                    <span>Citação em Destaque</span>
+                                </span>
+                                <span class="text-[10px] bg-purple-950 text-purple-300 border border-purple-700/50 px-2 py-0.5 rounded-full font-semibold">99% Relevância</span>
+                            </div>
+
+                            <div class="space-y-2">
+                                <h4 class="text-sm font-bold text-white leading-snug">
+                                    "Mitigação de Algoritmos Discriminatórios em Sistemas de IA"
+                                </h4>
+                                <p class="text-xs text-purple-300 font-semibold">
+                                    Dra. Beatriz Santos Lima — USP (2024)
+                                </p>
+                            </div>
+
+                            <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-[11px] citation-font text-slate-300 italic break-words-custom">
+                                "A equidade algorítmica exige uma releitura das bases de amostragem no desenvolvimento de redes neurais..."
+                            </div>
+
+                            <div class="flex justify-between items-center text-xs text-slate-400 pt-1">
+                                <span><i class="fa-solid fa-quote-right text-purple-400 mr-1"></i> 142 Citações</span>
+                                <button onclick="quickSelectSample()" class="text-amber-400 hover:text-amber-300 font-bold flex items-center space-x-1 transition text-xs">
+                                    <span>Usar Exemplo no Formulário</span>
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- FORM CONTAINER WITH INPUT TYPE TOGGLE BUTTONS -->
+            <div class="bg-slate-900/60 backdrop-blur-md rounded-3xl p-8 sm:p-10 md:p-12 border border-slate-800 shadow-2xl space-y-8">
+                
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="h-12 w-12 rounded-2xl bg-purple-900/50 border border-purple-500/30 flex items-center justify-center text-purple-300 text-xl shadow-inner">
+                            <i class="fa-solid fa-file-pen"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-white">Análise Semântica da Pesquisa</h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Escolha como deseja fornecer as informações da sua pesquisa</p>
+                        </div>
+                    </div>
+
+                    <!-- BOTÕES DE SELEÇÃO: UM OU OUTRO -->
+                    <div class="inline-flex p-1.5 bg-slate-950 rounded-2xl border border-slate-800 self-start md:self-auto">
+                        <button 
+                            type="button" 
+                            id="mode-btn-pdf" 
+                            onclick="setFormMode('pdf')"
+                            class="flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all bg-gradient-to-r from-purple-600 to-purple-800 text-white shadow-md"
+                        >
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <span>Enviar PDF do Artigo</span>
+                        </button>
+                        <button 
+                            type="button" 
+                            id="mode-btn-manual" 
+                            onclick="setFormMode('manual')"
+                            class="flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white"
+                        >
+                            <i class="fa-solid fa-keyboard"></i>
+                            <span>Preencher Manualmente</span>
+                        </button>
+                    </div>
+                </div>
+
+                <form id="recommendation-form" onsubmit="handleAnalysisSubmit(event)" class="space-y-8">
+                    
+                    <!-- MODO 1: UPLOAD DE PDF -->
+                    <div id="section-pdf-upload" class="space-y-4">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                            Upload do Artigo em PDF <span class="text-purple-400">*</span>
+                        </label>
+                        <div 
+                            id="pdf-dropzone"
+                            onclick="document.getElementById('input-pdf').click()"
+                            class="border-2 border-dashed border-purple-500/40 hover:border-purple-500 bg-slate-950/80 hover:bg-purple-950/20 rounded-2xl p-8 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-3 group"
+                        >
+                            <input 
+                                type="file" 
+                                id="input-pdf" 
+                                accept=".pdf" 
+                                class="hidden" 
+                                onchange="handleFileSelect(event)"
+                            >
+                            <div class="h-14 w-14 rounded-full bg-purple-900/30 group-hover:bg-purple-800/50 text-purple-400 flex items-center justify-center text-2xl transition">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-200">
+                                    <span class="text-purple-400 underline">Clique para selecionar</span> ou arraste o arquivo PDF aqui
+                                </p>
+                                <p class="text-[11px] text-slate-500 mt-1">O assistente extrairá os dados automaticamente do PDF (Máx. 15MB)</p>
+                            </div>
+                        </div>
+
+                        <!-- Feedback do Arquivo Selecionado -->
+                        <div id="pdf-file-info" class="hidden flex items-center justify-between bg-purple-950/40 border border-purple-500/40 rounded-xl px-4 py-3">
+                            <div class="flex items-center space-x-3 overflow-hidden">
+                                <i class="fa-solid fa-file-circle-check text-emerald-400 text-lg"></i>
+                                <span id="pdf-file-name" class="text-xs font-medium text-slate-200 truncate">artigo.pdf</span>
+                            </div>
+                            <button type="button" onclick="removeSelectedPdf(event)" class="text-slate-400 hover:text-rose-400 transition text-xs font-bold px-2 py-1">
+                                <i class="fa-solid fa-trash-can mr-1"></i> Remover
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- MODO 2: PREENCHIMENTO MANUAL -->
+                    <div id="section-manual-input" class="space-y-8 hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <!-- Title Input -->
+                            <div class="md:col-span-2 space-y-2.5">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                                    Título do Artigo ou Projeto <span class="text-purple-400">*</span>
+                                </label>
+                                <input
+                                    id="input-title"
+                                    type="text"
+                                    placeholder="Ex: Algoritmos de Inteligência Artificial e Viés de Gênero na Saúde"
+                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition shadow-inner"
+                                />
+                            </div>
+
+                            <!-- Knowledge Area Dropdown -->
+                            <div class="space-y-2.5">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                                    Grande Área do Conhecimento
+                                </label>
+                                <select
+                                    id="input-area"
+                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition shadow-inner"
+                                >
+                                    <option value="Ciência da Computação">Ciência da Computação & IA</option>
+                                    <option value="Biotecnologia e Engenharia">Biotecnologia e Engenharia</option>
+                                    <option value="Ciências da Saúde">Ciências da Saúde</option>
+                                    <option value="Ciências Sociais">Ciências Sociais e Humanidades</option>
+                                    <option value="Física e Química">Física e Química</option>
+                                    <option value="Educação">Educação e Licenciaturas</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Abstract Input with Character Counter -->
+                        <div class="space-y-2.5">
+                            <div class="flex justify-between items-center">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                                    Resumo (Abstract) / Contexto Teórico
+                                </label>
+                                <span id="char-counter" class="text-[11px] font-medium text-slate-500">0 / 2000 caracteres</span>
+                            </div>
+                            <textarea
+                                id="input-abstract"
+                                rows="5"
+                                maxlength="2000"
+                                oninput="updateCharCount()"
+                                placeholder="Cole ou redija o resumo do trabalho para mapearmos os conceitos chaves e propor autoras de relevância temática..."
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition resize-none shadow-inner leading-relaxed"
+                            ></textarea>
+                        </div>
+
+                        <!-- Interactive Keywords System -->
+                        <div class="space-y-2.5">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                                Palavras-Chave (Pressione Enter para adicionar)
+                            </label>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex flex-wrap items-center gap-2.5 focus-within:ring-2 focus-within:ring-purple-500 shadow-inner min-h-[52px]">
+                                <div id="tags-container" class="flex flex-wrap items-center gap-2"></div>
+                                <input
+                                    id="input-tag"
+                                    type="text"
+                                    onkeydown="handleTagKeyDown(event)"
+                                    placeholder="Digite a palavra e pressione Enter..."
+                                    class="bg-transparent border-none text-sm text-slate-100 placeholder-slate-500 focus:outline-none flex-grow min-w-[180px] px-2 py-1"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Submit Button -->
+                    <div class="flex justify-end pt-4 border-t border-slate-800/60">
+                        <button
+                            id="btn-analyze"
+                            type="submit"
+                            class="w-full sm:w-auto inline-flex items-center justify-center space-x-3 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-purple-700 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold px-10 py-4 rounded-xl shadow-xl shadow-purple-950/60 transition transform active:scale-98 text-sm"
+                        >
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-300 text-base"></i>
+                            <span id="btn-analyze-text">Analisar e Processar Recomendações</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Toast Notification Container -->
+            <div id="toast-notification" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+                <div class="bg-slate-900 border border-purple-500/40 text-slate-100 px-5 py-3.5 rounded-xl shadow-2xl flex items-center space-x-3">
+                    <div class="h-8 w-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <span id="toast-message" class="text-xs font-semibold">Citação copiada com sucesso!</span>
+                </div>
+            </div>
+
+            <!-- Loading Feedback Animation -->
+            <div id="analysis-loader" class="hidden text-center py-16 space-y-6">
+                <div class="inline-block p-6 bg-purple-950/60 border border-purple-500/30 rounded-3xl shadow-2xl relative">
+                    <i class="fa-solid fa-circle-notch fa-spin text-4xl text-amber-400"></i>
+                </div>
+                <div class="space-y-2">
+                    <h3 class="text-xl font-bold text-white">Processando Matriz de Cruzamento Semântico...</h3>
+                    <p class="text-xs text-slate-400 max-w-md mx-auto">Filtrando publicações com liderança de autoras femininas alinhadas com o seu objeto de estudo.</p>
+                </div>
+            </div>
+
+            <!-- RESULTS PANEL -->
+            <div id="results-panel" class="space-y-10 pt-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-slate-800 pb-6">
+                    <div class="space-y-1">
+                        <h2 class="text-2xl font-extrabold text-white flex items-center space-x-3">
+                            <i class="fa-solid fa-book-open text-purple-400"></i>
+                            <span>Referências Acadêmicas Recomendadas</span>
+                        </h2>
+                        <p class="text-xs text-slate-400">Resultados ordenados por aderência conceitual e impacto acadêmico</p>
+                    </div>
+
+                    <div class="flex items-center space-x-3 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-xl text-xs shadow-sm">
+                        <i class="fa-solid fa-filter text-purple-400"></i>
+                        <span class="text-slate-300 font-semibold">Ordenar:</span>
+                        <select id="sort-select" onchange="renderPapers()" class="bg-slate-950 text-slate-200 border border-slate-800 rounded-lg px-2.5 py-1 focus:outline-none font-medium">
+                            <option value="relevance">Maior Relevância</option>
+                            <option value="recent">Mais Recentes</option>
+                            <option value="citations">Mais Citados</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="papers-list" class="space-y-8"></div>
+            </div>
+
+        </section>
+
+        <!-- TAB 2: EXPLORAR AUTORAS -->
+        <section id="tab-directory" class="tab-content hidden space-y-12">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-800 pb-6">
+                <div class="space-y-1">
+                    <h1 class="text-3xl font-black text-white flex items-center space-x-3">
+                        <i class="fa-solid fa-users text-purple-400"></i>
+                        <span>Diretório de Pesquisadoras</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Perfis de docentes e pesquisadoras com produções de destaque no ecossistema científico</p>
+                </div>
+
+                <div class="relative min-w-[320px]">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input
+                        id="search-author-input"
+                        type="text"
+                        oninput="filterAuthors()"
+                        placeholder="Buscar por nome, área ou instituição..."
+                        class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-inner"
+                    />
+                </div>
+            </div>
+
+            <div id="authors-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+        </section>
+
+        <!-- TAB 3: MÉTRICAS -->
+        <section id="tab-stats" class="tab-content hidden space-y-12">
+            <div class="border-b border-slate-800 pb-6 space-y-1">
+                <h1 class="text-3xl font-black text-white flex items-center space-x-3">
+                    <i class="fa-solid fa-chart-pie text-purple-400"></i>
+                    <span>Dashboard de Representatividade</span>
+                </h1>
+                <p class="text-xs text-slate-400">Indicadores de visibilidade e citações de autoras femininas na literatura global</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-8 space-y-4 shadow-xl">
+                    <div class="h-12 w-12 rounded-2xl bg-purple-900/40 border border-purple-500/30 flex items-center justify-center text-purple-300 text-xl">
+                        <i class="fa-solid fa-chart-column"></i>
+                    </div>
+                    <h3 class="text-4xl font-black text-white tracking-tight">31.2%</h3>
+                    <p class="text-xs font-bold text-purple-300 uppercase tracking-wider">Citações Globais Femininas</p>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Média estimada de artigos com autoria principal ou coautoria feminina citados nos principais periódicos internacionais.
+                    </p>
+                </div>
+
+                <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-8 space-y-4 shadow-xl">
+                    <div class="h-12 w-12 rounded-2xl bg-fuchsia-900/40 border border-fuchsia-500/30 flex items-center justify-center text-fuchsia-300 text-xl">
+                        <i class="fa-solid fa-arrow-trend-up"></i>
+                    </div>
+                    <h3 class="text-4xl font-black text-amber-300 tracking-tight">+58%</h3>
+                    <p class="text-xs font-bold text-amber-400 uppercase tracking-wider">Aumento de Citações com CitaDelas</p>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Manuscritos acadêmicos que utilizaram o recomendador apresentaram maior diversidade bibliográfica em bancas de defesa.
+                    </p>
+                </div>
+
+                <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-8 space-y-4 shadow-xl">
+                    <div class="h-12 w-12 rounded-2xl bg-amber-900/40 border border-amber-500/30 flex items-center justify-center text-amber-300 text-xl">
+                        <i class="fa-solid fa-file-export"></i>
+                    </div>
+                    <h3 class="text-4xl font-black text-white tracking-tight">18.4k</h3>
+                    <p class="text-xs font-bold text-slate-300 uppercase tracking-wider">Exportações de Referências</p>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Referências formatadas e exportadas nos formatos ABNT, APA, IEEE e BibTeX em instituições de ensino brasileiras.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: SOBRE O PROJETO -->
+        <section id="tab-about" class="tab-content hidden max-w-4xl mx-auto space-y-10">
+            <div class="text-center space-y-3">
+                <div class="inline-flex items-center space-x-2 bg-purple-950/80 text-purple-200 border border-purple-500/30 px-3.5 py-1 rounded-full text-xs font-semibold">
+                    <i class="fa-solid fa-heart text-pink-500"></i>
+                    <span>Iniciativa de Impacto Social e Científico</span>
+                </div>
+                <h1 class="text-3xl md:text-4xl font-black text-white">Sobre o CitaDelas</h1>
+                <p class="text-slate-400 text-sm max-w-2xl mx-auto">
+                    Transformando o panorama acadêmico através do reconhecimento e citações intencionais de cientistas mulheres.
+                </p>
+            </div>
+
+            <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-8 md:p-10 space-y-6 text-slate-300 text-sm leading-relaxed">
+                <h3 class="text-lg font-bold text-white">Nossa Missão</h3>
+                <p>
+                    O **CitaDelas** nasce para combater o chamado *Efeito Matilda* — a histórica invisibilização das contribuições femininas na ciência. Através do uso de inteligência semântica, ajudamos pesquisadores de todas as áreas a diversificarem suas referências bibliográficas, promovendo equidade de gênero nos artigos, dissertações e teses.
+                </p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- DRAWER: CITAÇÕES SALVAS -->
+    <div id="saved-drawer" class="fixed inset-0 z-50 pointer-events-none hidden">
+        <div id="drawer-backdrop" onclick="toggleSavedDrawer()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm opacity-0 transition-opacity duration-300 pointer-events-auto"></div>
+        <div id="drawer-content" class="absolute right-0 top-0 bottom-0 w-full max-w-md bg-slate-900 border-l border-slate-800 shadow-2xl p-6 flex flex-col justify-between transform translate-x-full transition-transform duration-300 pointer-events-auto">
+            <div class="space-y-6 overflow-y-auto">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <div class="flex items-center space-x-2.5">
+                        <i class="fa-solid fa-bookmark text-amber-400"></i>
+                        <h3 class="font-bold text-white text-lg">Minhas Citações</h3>
+                    </div>
+                    <button onclick="toggleSavedDrawer()" class="text-slate-400 hover:text-white p-2">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                <div id="saved-list" class="space-y-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        const mockPapers = [
+            {
+                id: 'paper-1',
+                title: 'Mitigação de Algoritmos Discriminatórios em Sistemas de IA',
+                author: 'Dra. Beatriz Santos Lima',
+                institution: 'USP - Universidade de São Paulo',
+                year: 2024,
+                citations: 142,
+                relevance: 99,
+                area: 'Ciência da Computação',
+                abstract: 'Analisa o impacto da amostragem em redes neurais profundas para prevenção de vieses de gênero e raça no processamento de linguagem natural.',
+                abnt: 'LIMA, Beatriz Santos. Mitigação de Algoritmos Discriminatórios em Sistemas de IA. Revista Brasileira de Computação, v. 12, n. 2, p. 45-60, 2024.'
+            },
+            {
+                id: 'paper-2',
+                title: 'Avanços em Terapia Genética com CRISPR-Cas9 para Doenças Raras',
+                author: 'Dra. Camila Nogueira Ribeiro',
+                institution: 'Unicamp',
+                year: 2023,
+                citations: 210,
+                relevance: 94,
+                area: 'Biotecnologia e Engenharia',
+                abstract: 'Estudo translacional focando na precisão de edição genômica e redução de mutações off-target em vetores virais.',
+                abnt: 'RIBEIRO, Camila Nogueira. Avanços em Terapia Genética com CRISPR-Cas9 para Doenças Raras. Jornal de Biotecnologia, v. 8, p. 112-128, 2023.'
+            }
+        ];
+
+        const mockAuthors = [
+            { name: 'Dra. Beatriz Santos Lima', role: 'Professora Titular de IA', institution: 'USP', area: 'Ciência da Computação', papersCount: 48, hIndex: 22 },
+            { name: 'Dra. Camila Nogueira Ribeiro', role: 'Pesquisadora em Genética', institution: 'Unicamp', area: 'Biotecnologia', papersCount: 62, hIndex: 31 }
+        ];
+
+        let currentFormMode = 'pdf'; // Modos: 'pdf' ou 'manual'
+        let selectedTags = ['Inteligência Artificial', 'Gênero'];
+        let savedPapers = [];
+        let selectedPdfFile = null;
+
+        // ALTERNÂNCIA ENTRE MODO PDF E MANUAL
+        function setFormMode(mode) {
+            currentFormMode = mode;
+            const pdfSection = document.getElementById('section-pdf-upload');
+            const manualSection = document.getElementById('section-manual-input');
+            const btnPdf = document.getElementById('mode-btn-pdf');
+            const btnManual = document.getElementById('mode-btn-manual');
+
+            const activeStyle = "flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all bg-gradient-to-r from-purple-600 to-purple-800 text-white shadow-md";
+            const inactiveStyle = "flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white";
+
+            if (mode === 'pdf') {
+                pdfSection.classList.remove('hidden');
+                manualSection.classList.add('hidden');
+                btnPdf.className = activeStyle;
+                btnManual.className = inactiveStyle;
+            } else {
+                pdfSection.classList.add('hidden');
+                manualSection.classList.remove('hidden');
+                btnManual.className = activeStyle;
+                btnPdf.className = inactiveStyle;
+            }
+        }
+
+        // Upload do PDF
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.type !== 'application/pdf') {
+                    showToast('Por favor, selecione um arquivo no formato PDF.');
+                    return;
+                }
+                selectedPdfFile = file;
+                document.getElementById('pdf-file-name').innerText = file.name + ` (${(file.size / (1024*1024)).toFixed(2)} MB)`;
+                document.getElementById('pdf-file-info').classList.remove('hidden');
+                document.getElementById('pdf-dropzone').classList.add('border-purple-500', 'bg-purple-950/20');
+                showToast('Arquivo PDF anexado!');
+            }
+        }
+
+        function removeSelectedPdf(e) {
+            e.stopPropagation();
+            selectedPdfFile = null;
+            document.getElementById('input-pdf').value = '';
+            document.getElementById('pdf-file-info').classList.add('hidden');
+            document.getElementById('pdf-dropzone').classList.remove('border-purple-500', 'bg-purple-950/20');
+            showToast('Arquivo removido.');
+        }
+
+        // Submissão do Formulário
+        function handleAnalysisSubmit(e) {
+            e.preventDefault();
+
+            // Validação simples dependendo da opção escolhida
+            if (currentFormMode === 'pdf' && !selectedPdfFile) {
+                showToast('Por favor, anexe um arquivo PDF do artigo.');
+                return;
+            }
+
+            if (currentFormMode === 'manual') {
+                const titleVal = document.getElementById('input-title').value.trim();
+                if (!titleVal) {
+                    showToast('Por favor, preencha o título do artigo.');
+                    return;
+                }
+            }
+
+            const loader = document.getElementById('analysis-loader');
+            loader.classList.remove('hidden');
+
+            setTimeout(() => {
+                loader.classList.add('hidden');
+                renderPapers();
+                showToast(currentFormMode === 'pdf' ? 'PDF analisado e referências geradas!' : 'Análise dos dados concluída!');
+                document.getElementById('results-panel').scrollIntoView({ behavior: 'smooth' });
+            }, 1200);
+        }
+
+        // Navegação de Abas Principais
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = "nav-btn flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800/60";
+            });
+
+            const activeBtn = document.getElementById('nav-' + tabId);
+            if (activeBtn) {
+                activeBtn.className = "nav-btn flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all bg-gradient-to-r from-purple-900/80 to-fuchsia-900/80 text-white border border-purple-500/40 shadow-sm";
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateCharCount() {
+            const val = document.getElementById('input-abstract').value;
+            document.getElementById('char-counter').innerText = `${val.length} / 2000 caracteres`;
+        }
+
+        function renderTags() {
+            const container = document.getElementById('tags-container');
+            container.innerHTML = '';
+            selectedTags.forEach((tag, idx) => {
+                const tagEl = document.createElement('span');
+                tagEl.className = "bg-purple-900/60 text-purple-200 border border-purple-500/40 px-3 py-1 rounded-lg text-xs font-medium flex items-center space-x-2";
+                tagEl.innerHTML = `
+                    <span>${tag}</span>
+                    <button type="button" onclick="removeTag(${idx})" class="hover:text-amber-300 transition">&times;</button>
+                `;
+                container.appendChild(tagEl);
+            });
+        }
+
+        function handleTagKeyDown(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const val = e.target.value.trim();
+                if (val && !selectedTags.includes(val)) {
+                    selectedTags.push(val);
+                    renderTags();
+                    e.target.value = '';
+                }
+            }
+        }
+
+        function removeTag(idx) {
+            selectedTags.splice(idx, 1);
+            renderTags();
+        }
+
+        function quickSelectSample() {
+            setFormMode('manual');
+            document.getElementById('input-title').value = "Mitigação de Algoritmos Discriminatórios em Sistemas de IA";
+            document.getElementById('input-abstract').value = "A equidade algorítmica exige uma releitura das bases de amostragem no desenvolvimento de redes neurais...";
+            updateCharCount();
+            showToast('Exemplo carregado no formulário!');
+        }
+
+        function renderPapers() {
+            const container = document.getElementById('papers-list');
+            container.innerHTML = '';
+
+            mockPapers.forEach(paper => {
+                const isSaved = savedPapers.some(p => p.id === paper.id);
+                const card = document.createElement('div');
+                card.className = "bg-slate-900/80 border border-slate-800 hover:border-purple-500/40 rounded-3xl p-6 md:p-8 space-y-5 transition shadow-xl";
+                
+                card.innerHTML = `
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800/80 pb-4">
+                        <div class="flex items-center space-x-3">
+                            <span class="bg-purple-950 text-purple-300 border border-purple-700/50 px-3 py-1 rounded-full text-xs font-bold">
+                                ${paper.relevance}% Relevância Semântica
+                            </span>
+                            <span class="text-xs text-slate-400 font-medium">${paper.area}</span>
+                        </div>
+                        <button onclick="toggleSavePaper('${paper.id}')" class="text-xs font-bold flex items-center space-x-2 ${isSaved ? 'text-amber-400' : 'text-slate-400 hover:text-amber-400'} transition">
+                            <i class="fa-${isSaved ? 'solid' : 'regular'} fa-bookmark text-sm"></i>
+                            <span>${isSaved ? 'Salvo nas Minhas Citações' : 'Salvar Referência'}</span>
+                        </button>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h3 class="text-lg md:text-xl font-bold text-white leading-snug break-words-custom">${paper.title}</h3>
+                        <p class="text-xs text-purple-300 font-semibold">${paper.author} — <span class="text-slate-400">${paper.institution} (${paper.year})</span></p>
+                    </div>
+
+                    <p class="text-xs text-slate-300 leading-relaxed break-words-custom">${paper.abstract}</p>
+
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Formato ABNT</span>
+                            <button onclick="copyToClipboard(\`${paper.abnt}\`)" class="text-xs text-purple-400 hover:text-purple-300 font-bold flex items-center space-x-1">
+                                <i class="fa-regular fa-copy"></i>
+                                <span>Copiar</span>
+                            </button>
+                        </div>
+                        <p class="text-xs citation-font text-slate-200 break-words-custom">${paper.abnt}</p>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleSavePaper(paperId) {
+            const paper = mockPapers.find(p => p.id === paperId);
+            const index = savedPapers.findIndex(p => p.id === paperId);
+
+            if (index > -1) {
+                savedPapers.splice(index, 1);
+                showToast('Referência removida dos salvos.');
+            } else {
+                savedPapers.push(paper);
+                showToast('Referência salva com sucesso!');
+            }
+            document.getElementById('saved-counter').innerText = savedPapers.length;
+            renderPapers();
+            renderSavedDrawer();
+        }
+
+        function toggleSavedDrawer() {
+            const drawer = document.getElementById('saved-drawer');
+            const backdrop = document.getElementById('drawer-backdrop');
+            const content = document.getElementById('drawer-content');
+
+            if (drawer.classList.contains('hidden')) {
+                drawer.classList.remove('hidden');
+                setTimeout(() => {
+                    backdrop.classList.remove('opacity-0');
+                    content.classList.remove('translate-x-full');
+                }, 10);
+            } else {
+                backdrop.classList.add('opacity-0');
+                content.classList.add('translate-x-full');
+                setTimeout(() => {
+                    drawer.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        function renderSavedDrawer() {
+            const container = document.getElementById('saved-list');
+            container.innerHTML = '';
+
+            if (savedPapers.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-500 text-center py-8">Nenhuma citação salva até o momento.</p>';
+                return;
+            }
+
+            savedPapers.forEach(paper => {
+                const item = document.createElement('div');
+                item.className = "bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2";
+                item.innerHTML = `
+                    <h4 class="text-xs font-bold text-white break-words-custom">${paper.title}</h4>
+                    <p class="text-[11px] text-purple-300">${paper.author}</p>
+                    <p class="text-[10px] citation-font text-slate-400 break-words-custom">${paper.abnt}</p>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            showToast('Citação copiada para a área de transferência!');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-notification');
+            document.getElementById('toast-message').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function renderAuthors() {
+            const container = document.getElementById('authors-grid');
+            container.innerHTML = '';
+            mockAuthors.forEach(author => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-900/60 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl flex flex-col justify-between";
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-base font-bold text-white">${author.name}</h3>
+                                <p class="text-xs text-purple-300 font-medium">${author.role}</p>
+                            </div>
+                            <span class="text-[10px] bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full font-bold">${author.institution}</span>
+                        </div>
+                        <p class="text-xs text-slate-400">Grande Área: <span class="text-slate-200 font-medium">${author.area}</span></p>
+                    </div>
+                    <div class="flex items-center justify-between border-t border-slate-800/80 pt-4 text-xs text-slate-400">
+                        <span><strong class="text-white">${author.papersCount}</strong> Publicações</span>
+                        <span>Índice-h: <strong class="text-amber-400">${author.hIndex}</strong></span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTags();
+            renderPapers();
+            renderAuthors();
+        });
+    </script>
+</body>
+</html>
