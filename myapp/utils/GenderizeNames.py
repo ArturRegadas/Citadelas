@@ -95,6 +95,39 @@ def female_authorship_share(authors: List[str], country_id: Optional[str] = "BR"
     return round(female / len(authors) * 100)
 
 
+def analyze_authors(authors: List[str], country_id: Optional[str] = "BR") -> Dict[str, Any]:
+    predictions = genderize_names(authors, country_id=country_id)
+    total = len(predictions)
+
+    if total == 0:
+        return {
+            "authors": [],
+            "total": 0,
+            "female_count": 0,
+            "male_count": 0,
+            "unknown_count": 0,
+            "female_percentage": 0.0,
+            "male_percentage": 0.0,
+            "unknown_percentage": 0.0,
+        }
+
+    female_count = sum(1 for p in predictions if p["is_female"])
+    male_count = sum(1 for p in predictions if p["gender"] == "male")
+    unknown_count = total - female_count - male_count
+
+    return {
+        "authors": predictions,
+        "total": total,
+        "female_count": female_count,
+        "male_count": male_count,
+        "unknown_count": unknown_count,
+        "female_percentage": round(female_count / total * 100, 1),
+        "male_percentage": round(male_count / total * 100, 1),
+        "unknown_percentage": round(unknown_count / total * 100, 1),
+    }
+
+
 genderize_name_async = make_async(genderize_name)
 genderize_names_async = make_async(genderize_names)
 female_authorship_share_async = make_async(female_authorship_share)
+analyze_authors_async = make_async(analyze_authors)
