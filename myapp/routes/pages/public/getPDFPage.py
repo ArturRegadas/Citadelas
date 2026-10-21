@@ -1,6 +1,6 @@
 from flask import render_template, Blueprint, Response, request, jsonify
 from myapp.services.Article import calculate_articles_scores
-from myapp.services.ExtractTextService import extract_text_from_pdf
+from myapp.services.ExtractTextService import extract_file_text
 import myapp.services.GeminiService as geminiService
 
 getPDFPage = Blueprint("getPDFPage", __name__)
@@ -15,7 +15,7 @@ def getPDFPage() -> Response:
     """
 
     pdf_data = {}
-    pdf_data["all_context"] = extract_text_from_pdf(pdf_file)
+    pdf_data["all_context"] = extract_file_text(pdf_file)
     pdf_data = geminiService.analyze_article(pdf_data["all_context"])
 
 
