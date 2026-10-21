@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CitaDelas — Painel de recomendações</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/theme.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-topbar.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-drawer.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/result.css') }}" />
+</head>
+<body class="cd-body">
+
+  {% with active='resultado' %}{% include 'components/citadelas/Topbar.html' %}{% endwith %}
+
+  <!-- Sub-navegação entre as views do painel -->
+  <div class="cd-subnav">
+    <div class="cd-shell cd-subnav__inner">
+      <nav class="cd-viewtabs" role="tablist" aria-label="Seções do painel">
+        <button id="cd-vt-results" class="cd-viewtabs__btn is-active" role="tab" aria-selected="true" onclick="CitaDelasResult.switchView('results')">
+          <i class="fa-solid fa-layer-group" aria-hidden="true"></i> Recomendações
+        </button>
+        <button id="cd-vt-compare" class="cd-viewtabs__btn" role="tab" aria-selected="false" onclick="CitaDelasResult.switchView('compare')">
+          <i class="fa-solid fa-chart-column" aria-hidden="true"></i> Comparar
+        </button>
+        <button id="cd-vt-pdf" class="cd-viewtabs__btn" role="tab" aria-selected="false" onclick="CitaDelasResult.switchView('pdf')">
+          <i class="fa-regular fa-file-lines" aria-hidden="true"></i> Onde citar
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <main class="cd-shell cd-panel">
+
+    <!-- ============ VIEW: RECOMENDAÇÕES ============ -->
+    <section id="cd-view-results" class="cd-view" role="tabpanel" aria-label="Recomendações">
+      <div class="cd-view__banner cd-card cd-card--accent">
+        <div>
+          <span class="cd-kicker">Resultado da análise</span>
+          <h1 class="cd-view__title">Artigos de autoras recomendados</h1>
+          <p class="cd-view__desc">Priorizados por aderência semântica ao seu manuscrito e por provável liderança feminina na autoria.</p>
+        </div>
+        <div class="cd-view__sort">
+          <label class="cd-label" for="cd-r-sort">Ordenar por</label>
+          <select id="cd-r-sort" class="cd-select cd-select--sm" onchange="CitaDelasResult.applyFilters()">
+            <option value="score">Aderência (%)</option>
+            <option value="year">Ano (recentes)</option>
+            <option value="citations">Citações</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="cd-layout">
+        <!-- Sidebar de filtros -->
+        <aside class="cd-filters cd-card" aria-label="Filtros">
+          <div class="cd-filters__head">
+            <h2 class="cd-kicker"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Filtros</h2>
+            <button type="button" class="cd-btn cd-btn--sm cd-btn--ghost" onclick="CitaDelasResult.resetFilters()">Limpar</button>
+          </div>
+
+          <div class="cd-field">
+            <label class="cd-label" for="cd-f-search">Buscar termo</label>
+            <input id="cd-f-search" class="cd-input" type="text" placeholder="Título, autora, tópico…" oninput="CitaDelasResult.applyFilters()" />
+          </div>
+
+          <fieldset class="cd-filters__group">
+            <legend class="cd-label">Critérios</legend>
+            <label class="cd-check">
+              <input id="cd-f-oa" type="checkbox" onchange="CitaDelasResult.applyFilters()" />
+              <span><i class="fa-solid fa-lock-open" aria-hidden="true" style="color:var(--cd-green)"></i> Somente acesso aberto</span>
+            </label>
+            <label class="cd-check">
+              <input id="cd-f-female" type="checkbox" onchange="CitaDelasResult.applyFilters()" />
+              <span><i class="fa-solid fa-venus" aria-hidden="true" style="color:var(--cd-rose)"></i> Autoria 100% feminina</span>
+            </label>
+          </fieldset>
+
+          <div class="cd-field">
+            <div class="cd-field__row">
+              <label class="cd-label" for="cd-f-year">Ano mínimo</label>
+              <span class="cd-year-val" id="cd-f-year-val">2020</span>
+            </div>
+            <input id="cd-f-year" class="cd-range" type="range" min="2018" max="2024" value="2020" oninput="CitaDelasResult.onYearInput(this.value)" />
+          </div>
+
+          <div class="cd-filters__count">
+            <span class="cd-kicker">Nesta sessão</span>
+            <strong id="cd-r-count">0</strong>
+            <span>recomendações</span>
+          </div>
+        </aside>
+
+        <!-- Lista + estados -->
+        <div class="cd-reclist-wrap">
+          <div id="cd-r-loading" class="cd-skel-list" hidden aria-hidden="true">
+            <div class="cd-skel-card"><div class="cd-skeleton" style="height:16px;width:40%"></div><div class="cd-skeleton" style="height:24px;width:75%"></div><div class="cd-skeleton" style="height:12px;width:92%"></div></div>
+            <div class="cd-skel-card"><div class="cd-skeleton" style="height:16px;width:34%"></div><div class="cd-skeleton" style="height:24px;width:68%"></div><div class="cd-skeleton" style="height:12px;width:88%"></div></div>
+          </div>
+          <div id="cd-reclist" class="cd-reclist"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: COMPARAR ============ -->
+    <section id="cd-view-compare" class="cd-view" role="tabpanel" aria-label="Comparação" hidden>
+      <div class="cd-card cd-compare__picker">
+        <div class="cd-compare__picker-head">
+          <div>
+            <span class="cd-kicker"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i> Comparação</span>
+            <h2 class="cd-view__title">Confronte até 3 recomendações</h2>
+            <p class="cd-view__desc">Selecione as pesquisas e compare aderência, atualidade e composição de autoria.</p>
+          </div>
+          <span class="cd-badge cd-badge--teal" id="cd-sel-counter">0 de 3</span>
+        </div>
+        <div id="cd-selectors" class="cd-selectors"></div>
+      </div>
+
+      <div id="cd-compare-empty" class="cd-state" hidden>
+        <span class="cd-state__icon cd-state__icon--empty"><i class="fa-solid fa-chart-column"></i></span>
+        <p class="cd-state__title">Selecione ao menos uma pesquisa</p>
+        <p class="cd-state__desc">Marque as recomendações acima para visualizar os gráficos comparativos.</p>
+      </div>
+
+      <div id="cd-charts" class="cd-charts">
+        <div class="cd-metric cd-card" data-metric="similarity">
+          <div class="cd-metric__head"><h3><i class="fa-solid fa-bullseye" style="color:var(--cd-accent)"></i> Similaridade</h3>
+            <select class="cd-select cd-select--sm" data-chart-type="similarity"><option value="radar">Radar</option><option value="bar">Barras</option><option value="horizontalBar">Barras H.</option><option value="doughnut">Rosca</option></select></div>
+          <div class="cd-metric__canvas"><canvas id="cd-chart-similarity"></canvas></div>
+          <div class="cd-metric__winner">Destaque: <strong data-winner="similarity">—</strong></div>
+        </div>
+        <div class="cd-metric cd-card" data-metric="problem_fit">
+          <div class="cd-metric__head"><h3><i class="fa-solid fa-magnifying-glass" style="color:var(--cd-gold)"></i> Aderência ao problema</h3>
+            <select class="cd-select cd-select--sm" data-chart-type="problem_fit"><option value="doughnut">Rosca</option><option value="bar">Barras</option><option value="horizontalBar">Barras H.</option><option value="radar">Radar</option></select></div>
+          <div class="cd-metric__canvas"><canvas id="cd-chart-problem_fit"></canvas></div>
+          <div class="cd-metric__winner">Destaque: <strong data-winner="problem_fit">—</strong></div>
+        </div>
+        <div class="cd-metric cd-card" data-metric="freshness">
+          <div class="cd-metric__head"><h3><i class="fa-solid fa-clock-rotate-left" style="color:var(--cd-teal)"></i> Atualidade</h3>
+            <select class="cd-select cd-select--sm" data-chart-type="freshness"><option value="bar">Barras</option><option value="horizontalBar">Barras H.</option><option value="line">Linha</option><option value="doughnut">Rosca</option></select></div>
+          <div class="cd-metric__canvas"><canvas id="cd-chart-freshness"></canvas></div>
+          <div class="cd-metric__winner">Destaque: <strong data-winner="freshness">—</strong></div>
+        </div>
+        <div class="cd-metric cd-card" data-metric="openalex_relevance">
+          <div class="cd-metric__head"><h3><i class="fa-solid fa-globe" style="color:var(--cd-info)"></i> Relevância OpenAlex</h3>
+            <select class="cd-select cd-select--sm" data-chart-type="openalex_relevance"><option value="polarArea">Área polar</option><option value="bar">Barras</option><option value="doughnut">Rosca</option></select></div>
+          <div class="cd-metric__canvas"><canvas id="cd-chart-openalex_relevance"></canvas></div>
+          <div class="cd-metric__winner">Destaque: <strong data-winner="openalex_relevance">—</strong></div>
+        </div>
+        <div class="cd-metric cd-card" data-metric="reliability">
+          <div class="cd-metric__head"><h3><i class="fa-solid fa-shield-halved" style="color:var(--cd-green)"></i> Confiabilidade</h3>
+            <select class="cd-select cd-select--sm" data-chart-type="reliability"><option value="doughnut">Rosca</option><option value="bar">Barras</option><option value="horizontalBar">Barras H.</option></select></div>
+          <div class="cd-metric__canvas"><canvas id="cd-chart-reliability"></canvas></div>
+          <div class="cd-metric__winner">Destaque: <strong data-winner="reliability">—</strong></div>
+        </div>
+        <div class="cd-metric cd-card cd-metric--wide" data-metric="gender">
+          <div class="cd-metric__head"><h3><i class="fa-solid fa-venus-mars" style="color:var(--cd-rose)"></i> Composição de gênero das autorias</h3>
+            <span class="cd-badge">Empilhado</span></div>
+          <div class="cd-metric__canvas cd-metric__canvas--wide"><canvas id="cd-chart-gender"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: ONDE CITAR (PDF) ============ -->
+    <section id="cd-view-pdf" class="cd-view" role="tabpanel" aria-label="Onde citar" hidden>
+      <div class="cd-card cd-pdfhead">
+        <div class="cd-pdfhead__title">
+          <span class="cd-pdfhead__icon" aria-hidden="true"><i class="fa-regular fa-file-lines"></i></span>
+          <div>
+            <h2 class="cd-view__title">Onde inserir as citações</h2>
+            <p class="cd-view__desc">Cada marcação é um ponto do seu texto onde uma autora recomendada se encaixa.</p>
+          </div>
+        </div>
+        <span class="cd-badge cd-badge--ok"><i class="fa-solid fa-circle-check"></i> Análise concluída</span>
+      </div>
+
+      <div class="cd-pdfgrid">
+        <!-- Documento -->
+        <div class="cd-doc cd-card">
+          <div class="cd-doc__bar">
+            <div class="cd-doc__meta">
+              <span class="cd-doc__fileicon" aria-hidden="true"><i class="fa-regular fa-file-lines"></i></span>
+              <div class="cd-doc__metatext">
+                <p id="cd-doc-title" class="cd-truncate">Documento submetido</p>
+                <p id="cd-doc-page" class="cd-doc__pageind">Página 1 de 3</p>
+              </div>
+            </div>
+            <div class="cd-doc__nav">
+              <button type="button" class="cd-btn cd-btn--icon cd-btn--soft" onclick="CitaDelasResult.changePage(-1)" aria-label="Página anterior"><i class="fa-solid fa-chevron-left"></i></button>
+              <button type="button" class="cd-btn cd-btn--icon cd-btn--soft" onclick="CitaDelasResult.changePage(1)" aria-label="Próxima página"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+          </div>
+          <div class="cd-doc__scroll" id="cd-doc-scroll">
+            <article class="cd-doc__page">
+              <header class="cd-doc__pagehead">
+                <span class="cd-doc__kicker">Artigo submetido</span>
+                <h3 id="cd-doc-paper-title" class="cd-break">Título do artigo</h3>
+                <p id="cd-doc-authors" class="cd-doc__authors cd-break cd-clamp-1"></p>
+              </header>
+              <div id="cd-doc-content" class="cd-doc__body"></div>
+            </article>
+          </div>
+        </div>
+
+        <!-- Explicações -->
+        <aside class="cd-citations" aria-label="Locais de citação">
+          <div class="cd-card cd-citations__head">
+            <div>
+              <h3 class="cd-kicker"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Locais de citação</h3>
+              <p class="cd-view__desc">Clique em um cartão para pular até o trecho.</p>
+            </div>
+            <span class="cd-badge cd-badge--teal" id="cd-cite-count">0 locais</span>
+          </div>
+          <div id="cd-citation-cards" class="cd-citations__list"></div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- Drawer de detalhe da recomendação -->
+  <div id="cd-detail-drawer" class="cd-drawer cd-drawer--wide" hidden>
+    <div class="cd-drawer__backdrop" data-cd-detail-close tabindex="-1"></div>
+    <aside class="cd-drawer__panel" role="dialog" aria-modal="true" aria-labelledby="cd-detail-title">
+      <header class="cd-drawer__head">
+        <div>
+          <span class="cd-badge" id="cd-detail-id">artigo</span>
+          <h2 class="cd-drawer__title" id="cd-detail-title" style="margin-top:8px; font-size:1.1rem;"></h2>
+        </div>
+        <button type="button" class="cd-btn cd-btn--icon cd-btn--ghost" data-cd-detail-close aria-label="Fechar detalhe"><i class="fa-solid fa-xmark"></i></button>
+      </header>
+      <div class="cd-drawer__body" id="cd-detail-body"></div>
+    </aside>
+  </div>
+
+  {% include 'components/citadelas/SavedDrawer.html' %}
+  {% include 'components/citadelas/Toast.html' %}
+
+  <script src="{{ url_for('static', filename='js/components/CitaDelasShared.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/components/CitaDelasData.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/components/CitaDelasCharts.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/mains/CitaDelasResult.js') }}"></script>
+</body>
+</html>
