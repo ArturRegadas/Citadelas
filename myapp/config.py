@@ -20,6 +20,14 @@ class Config:
     GOOGLE_REDIRECT_URIS =  getenv("GOOGLE_REDIRECT_URIS", "")
     REDIRECT_URI =          getenv("REDIRECT_URI", "")
     #=====================================================
+
+    #=============== DEMOGRAFIX (Genderize) ===============
+    DEMOGRAFIX_API_KEY =    getenv("DEMOGRAFIX_API_KEY", "")
+    #======================================================
+
+    #=============== OPENALEX ===============
+    OPENALEX_API_KEY =      getenv("OPENALEX_API_KEY", "")
+    #========================================
     
     #============== FLASK & SOCKETIO ==============
     SOCKETIO_ASYNC_MODE =   getenv("SOCKETIO_ASYNC_MODE", "threading")
@@ -53,5 +61,8 @@ class Config:
     CACHE_DEFAULT_TIMEOUT = int(getenv("CACHE_DEFAULT_TIMEOUT", 300))
     #=======================================================
 
+
+    #======================= GEMINI INTEGRATION =====================#
     GEMINI_API_KEY = getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL = getenv("GEMINI_MODEL", "")
+    #=================================================================#

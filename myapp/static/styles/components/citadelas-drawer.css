@@ -1,0 +1,87 @@
+/* ============================================================
+   Drawer lateral (citações salvas / detalhes)
+   ============================================================ */
+.cd-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+}
+.cd-drawer[hidden] { display: none; }
+
+.cd-drawer__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 8, 6, 0.72);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  transition: opacity 0.26s ease;
+}
+.cd-drawer.is-open .cd-drawer__backdrop { opacity: 1; }
+
+.cd-drawer__panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(440px, 100%);
+  display: flex;
+  flex-direction: column;
+  background: var(--cd-ink-850);
+  border-left: 1px solid var(--cd-line);
+  box-shadow: -24px 0 50px -20px rgba(10, 8, 6, 0.9);
+  transform: translateX(100%);
+  transition: transform 0.28s ease;
+}
+.cd-drawer--wide .cd-drawer__panel { width: min(640px, 100%); }
+.cd-drawer.is-open .cd-drawer__panel { transform: translateX(0); }
+
+.cd-drawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--cd-line-soft);
+}
+.cd-drawer__title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.cd-drawer__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Item salvo */
+.cd-saved-item {
+  padding: 14px;
+  background: var(--cd-surface);
+  border: 1px solid var(--cd-line-soft);
+  border-left: 3px solid var(--cd-accent);
+  border-radius: var(--cd-r-sm);
+}
+.cd-saved-item__title { font-size: 0.82rem; font-weight: 700; margin: 0 0 4px; }
+.cd-saved-item__author { font-size: 0.72rem; color: #8fd0c4; margin: 0 0 8px; }
+.cd-saved-item__cite { font-size: 0.72rem; color: var(--cd-text-dim); margin: 0; font-family: var(--cd-serif); line-height: 1.5; }
+.cd-saved-item__remove {
+  margin-top: 10px;
+  background: none;
+  border: none;
+  color: var(--cd-text-dim);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+}
+.cd-saved-item__remove:hover { color: var(--cd-rose); }

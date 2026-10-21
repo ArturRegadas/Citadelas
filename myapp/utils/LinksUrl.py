@@ -5,10 +5,10 @@ from typing import Tuple, List
 PROFILE_PAGE =          "profilePage.ProfilePage"
 WAITING_PAGE =          "waitingPage.WaitingPage"
 CHANGE_PASSWORD_PAGE =  "changePasswordPage.ChangePasswordPage"
-LOGIN_PAGE =            "homePage.HomePage"
+LOGIN_PAGE =            "loginPage.LoginPage"
 SIGN_UP_PAGE =          "signUpPage.SignUpPage"
 CONFIG_PAGE =           "configPage.ConfigPage"
-HOME_PAGE =             "homePage.HomePage"
+HOME_PAGE =             "citaDelasPage.CitaDelasPage"
 #==============================================================
 
 #============= CONST OF BACK-END =============
