@@ -20,6 +20,10 @@ class Config:
     GOOGLE_REDIRECT_URIS =  getenv("GOOGLE_REDIRECT_URIS", "")
     REDIRECT_URI =          getenv("REDIRECT_URI", "")
     #=====================================================
+
+    #=============== DEMOGRAFIX (Genderize) ===============
+    DEMOGRAFIX_API_KEY =    getenv("DEMOGRAFIX_API_KEY", "")
+    #======================================================
     
     #============== FLASK & SOCKETIO ==============
     SOCKETIO_ASYNC_MODE =   getenv("SOCKETIO_ASYNC_MODE", "threading")
