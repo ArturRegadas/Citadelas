@@ -52,3 +52,6 @@ class Config:
     CACHE_REDIS_URL =       getenv("CACHE_REDIS_URL", None)
     CACHE_DEFAULT_TIMEOUT = int(getenv("CACHE_DEFAULT_TIMEOUT", 300))
     #=======================================================
+
+    GEMINI_API_KEY = getenv("GEMINI_API_KEY", "")
+    GEMINI_MODEL = getenv("GEMINI_MODEL", "")
