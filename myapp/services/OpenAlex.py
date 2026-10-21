@@ -1,4 +1,16 @@
-# alex_service.py
+# OpenAlex.py
+#
+# Serviço de busca de candidatos a referência no OpenAlex, com integração
+# opcional à estimativa de gênero das autorias (util GenderizeNames).
+#
+# O que faz:
+#   - Planeja e executa consultas por tópico (textual e semântica).
+#   - Deduplica por OpenAlex ID / DOI e exclui referências já citadas.
+#   - Reconstrói o resumo (abstract_inverted_index).
+#   - Opcionalmente, estima a composição de gênero das autorias de cada
+#     candidato reutilizando myapp.utils.GenderizeNames.analyze_authors.
+#
+# O que NÃO faz: similaridade entre abstracts, avaliação por IA, ranking final.
 
 import json
 import os
@@ -18,29 +30,38 @@ from urllib.request import Request, urlopen
 class AlexService:
     BASE_URL = "https://api.openalex.org/works"
 
-    def _init_(self, api_key=None, timeout=35):
+    def __init__(self, api_key=None, timeout=35):
+        # Mantém compatibilidade: usa a key passada, senão a do ambiente.
+        # Preferimos a Config do projeto quando disponível.
+        if api_key is None:
+            try:
+                from myapp.config import Config
+                api_key = getattr(Config, "OPENALEX_API_KEY", "") or None
+            except Exception:
+                api_key = None
+
         self.api_key = api_key or os.getenv("OPENALEX_API_KEY")
         self.timeout = timeout
 
         self._lock = Lock()
         self._ultima_chamada = 0.0
 
-    def buscar(self, entrada):
+    def buscar(self, entrada, estimar_genero=False, country_id="BR"):
         """
         Recupera candidatos para referências bibliográficas.
 
         Entrada:
             Contexto do artigo, tópicos, referências e preferências.
 
-        Saída:
-            Candidatos com os dados originais do OpenAlex,
-            consultas executadas e estatísticas.
+        Parâmetros:
+            estimar_genero: se True, anexa a composição de gênero das
+                autorias de cada candidato (via GenderizeNames.analyze_authors).
+            country_id: viés de país para a estimativa de gênero (padrão "BR").
 
-        Não realiza:
-            - Estimativa de gênero.
-            - Cálculo de similaridade entre abstracts.
-            - Avaliação por IA.
-            - Ranking final.
+        Saída:
+            Candidatos com os dados originais do OpenAlex, as consultas
+            executadas e estatísticas. Quando estimar_genero=True, cada
+            candidato ganha a chave "genero".
         """
         self._validar(entrada)
 
@@ -97,8 +118,6 @@ class AlexService:
 
                 resultados = resposta["results"]
 
-                # Preserva os metadados da resposta sem repetir
-                # a lista completa de artigos dentro do registro.
                 registro["metadados_resposta"] = deepcopy({
                     chave: valor
                     for chave, valor in resposta.items()
@@ -161,8 +180,6 @@ class AlexService:
 
                         existente["origens_busca"].append(origem)
 
-                        # Registra também identificadores que
-                        # não apareceram na primeira ocorrência.
                         if openalex_id:
                             indice_ids[openalex_id] = existente
 
@@ -179,6 +196,9 @@ class AlexService:
 
                     if doi:
                         indice_dois[doi] = artigo
+
+        if estimar_genero:
+            self._anexar_genero(candidatos, country_id=country_id)
 
         falhas = sum(
             registro["erro"] is not None
@@ -206,10 +226,171 @@ class AlexService:
                     referencias_excluidas,
                 "descartados_sem_identificacao":
                     descartados_sem_identificacao,
-                "candidatos_unicos": len(candidatos),
+                "artigos_unicos": len(candidatos),
             },
         }
 
+    # ============================================================
+    # INTEGRAÇÃO COM O UTIL DE GÊNERO (GenderizeNames)
+    # ============================================================
+
+    @staticmethod
+    def extrair_autores(item):
+        """Extrai os nomes das autorias de um objeto 'work' do OpenAlex.
+
+        Aceita tanto o artigo convertido (com 'dados_openalex') quanto o
+        objeto bruto do OpenAlex (com 'authorships').
+        """
+        dados = item.get("dados_openalex", item) if isinstance(item, dict) else {}
+        autorias = dados.get("authorships") or []
+
+        nomes = []
+        for autoria in autorias:
+            if not isinstance(autoria, dict):
+                continue
+            autor = autoria.get("author") or {}
+            nome = autor.get("display_name") or autoria.get("raw_author_name")
+            if nome and nome.strip():
+                nomes.append(nome.strip())
+        return nomes
+
+    @staticmethod
+    def filtrar_autoria_feminina(
+        resultado,
+        limite_percentual=50,
+        country_id="BR",
+        fallback_qtd=5,
+        limite_qtd=None,
+    ):
+        """Filtra o retorno de buscar() priorizando artigos de autoria feminina.
+
+        Recebe o dicionário devolvido por buscar() (com a lista "candidatos")
+        e retorna um dicionário com a MESMA estrutura, porém com "candidatos"
+        contendo apenas os artigos cuja participação feminina estimada é
+        MAIOR que limite_percentual (padrão: > 50%).
+
+        Fallback: se NENHUM artigo atingir o limite, em vez de devolver lista
+        vazia, retorna os artigos com maior participação feminina disponível
+        (ordenados do maior para o menor percentual), até fallback_qtd itens.
+        Passe fallback_qtd=0 para desligar o fallback e permitir lista vazia.
+
+        limite_qtd: número máximo de artigos a retornar. Quando definido, o
+        resultado é ordenado pela maior participação feminina e cortado nesse
+        total (vale tanto para o caso normal quanto para o fallback). Use None
+        (padrão) para não limitar a quantidade.
+
+        Cada candidato mantido conserva todos os dados originais do OpenAlex e
+        a chave "genero" (o retorno de GenderizeNames.analyze_authors), que
+        inclui a lista de dicionários por autor e as porcentagens.
+
+        Se os candidatos ainda não tiverem a chave "genero" (buscar() chamado
+        com estimar_genero=False), a estimativa é calculada aqui, uma vez por
+        artigo, reutilizando analyze_authors.
+        """
+        from copy import deepcopy
+
+        filtrado = deepcopy(resultado)
+        candidatos = filtrado.get("candidatos") or []
+
+        analyze_authors = None
+        com_genero = []   # artigos com estimativa disponível (passando ou não)
+        aprovados = []    # artigos acima do limite
+
+        for artigo in candidatos:
+            genero = artigo.get("genero")
+
+            # Calcula a estimativa sob demanda se ela ainda não existe.
+            if not isinstance(genero, dict) or not genero.get("disponivel"):
+                if analyze_authors is None:
+                    try:
+                        from myapp.utils.GenderizeNames import analyze_authors
+                    except Exception:
+                        analyze_authors = False  # marca como indisponível
+
+                if analyze_authors:
+                    autores = AlexService.extrair_autores(artigo)
+                    try:
+                        genero = analyze_authors(autores, country_id=country_id)
+                        genero["disponivel"] = True
+                        artigo["genero"] = genero
+                    except Exception:
+                        continue  # sem estimativa confiável: ignora o artigo
+                else:
+                    continue
+
+            com_genero.append(artigo)
+
+            if genero.get("female_percentage", 0) > limite_percentual:
+                aprovados.append(artigo)
+
+        usou_fallback = False
+
+        if aprovados:
+            mantidos = aprovados
+        elif fallback_qtd and com_genero:
+            # Ninguém passou do limite: pega os de maior participação feminina.
+            usou_fallback = True
+            ordenados = sorted(
+                com_genero,
+                key=lambda a: a["genero"].get("female_percentage", 0),
+                reverse=True,
+            )
+            mantidos = ordenados[:fallback_qtd]
+        else:
+            mantidos = []
+
+        # Corte opcional por quantidade: mantém os de maior participação.
+        if limite_qtd is not None and len(mantidos) > limite_qtd:
+            mantidos = sorted(
+                mantidos,
+                key=lambda a: a["genero"].get("female_percentage", 0),
+                reverse=True,
+            )[:limite_qtd]
+
+        filtrado["candidatos"] = mantidos
+
+        estatisticas = filtrado.get("estatisticas")
+        if isinstance(estatisticas, dict):
+            estatisticas["artigos_unicos"] = len(mantidos)
+            estatisticas["artigos_antes_do_filtro_genero"] = len(candidatos)
+            estatisticas["artigos_filtrados_por_genero"] = (
+                len(candidatos) - len(mantidos)
+            )
+            estatisticas["limite_percentual_feminino"] = limite_percentual
+            estatisticas["aprovados_acima_do_limite"] = len(aprovados)
+            estatisticas["usou_fallback_menor_participacao"] = usou_fallback
+            estatisticas["limite_qtd_solicitado"] = limite_qtd
+
+        return filtrado
+
+    def _anexar_genero(self, candidatos, country_id="BR"):
+        """Para cada candidato, estima a composição de gênero das autorias.
+
+        Reutiliza myapp.utils.GenderizeNames.analyze_authors. Falhas na API de
+        gênero NÃO derrubam a busca: o candidato recebe genero com "erro".
+        """
+        try:
+            from myapp.utils.GenderizeNames import analyze_authors
+        except Exception as erro:
+            for artigo in candidatos:
+                artigo["genero"] = {
+                    "disponivel": False,
+                    "erro": f"GenderizeNames indisponível: {erro}",
+                }
+            return
+
+        for artigo in candidatos:
+            autores = self.extrair_autores(artigo)
+            try:
+                analise = analyze_authors(autores, country_id=country_id)
+                analise["disponivel"] = True
+                artigo["genero"] = analise
+            except Exception as erro:
+                artigo["genero"] = {
+                    "disponivel": False,
+                    "erro": self._mensagem_erro(erro),
+                    "autores": autores,
+                }
     def _planejar_consultas(
         self,
         entrada,
@@ -790,47 +971,43 @@ class AlexService:
                     "O ano da referência deve ser inteiro."
                 )
 
-
-# Exemplo
-
-entrada = {
-    "resumo": (
-        "Oficinas de computação para meninas do Ensino Fundamental II, "
-        "com atividades desplugadas e digitais."
-    ),
-    "objetivo_pesquisa": (
-        "Investigar como oficinas despertam interesse pela computação "
-        "e apresentam possibilidades de carreira."
-    ),
-    "topicos": [
-        {
-            "tema": "Oficinas de computação para meninas",
-            "descricao": "Experiências práticas na educação básica.",
-            "consultas": [
-                "meninas computação oficinas"
-            ]
-        }
-    ],
-    "referencias_existentes": [],
-    "preferencias": {
-        "resultados_por_consulta": 2,
-        "busca_semantica": False,
-        "exigir_resumo": True,
-        "somente_acesso_aberto": False
+# ------------------------------------------------------------
+# Execução manual para teste (não roda na importação).
+# Rode com:  python -m myapp.services.OpenAlex
+# ------------------------------------------------------------
+if __name__ == "__main__":
+    entrada = {
+        "resumo": (
+            "Oficinas de computação para meninas do Ensino Fundamental II, "
+            "com atividades desplugadas e digitais."
+        ),
+        "objetivo_pesquisa": (
+            "Investigar como oficinas despertam interesse pela computação "
+            "e apresentam possibilidades de carreira."
+        ),
+        "topicos": [
+            {
+                "tema": "Oficinas de computação para meninas",
+                "descricao": "Experiências práticas na educação básica.",
+                "consultas": ["meninas computação oficinas"],
+            }
+        ],
+        "referencias_existentes": [],
+        "preferencias": {
+            "resultados_por_consulta": 2,
+            "busca_semantica": False,
+            "exigir_resumo": True,
+            "somente_acesso_aberto": False,
+        },
     }
-}
 
-service = AlexService()
-resultado = service.buscar(entrada)
+    service = AlexService()
+    # estimar_genero=True exige DEMOGRAFIX_API_KEY configurada.
+    resultado = service.buscar(entrada, estimar_genero=False)
 
-for artigo in resultado["candidatos"]:
-    dados = artigo["dados_openalex"]
-
-    print(artigo["titulo"])
-    print(artigo["resumo"])              # Resumo reconstruído
-    print(dados.get("authorships"))      # Autorias completas da resposta
-    print(dados.get("topics"))           # Temas
-    print(dados.get("keywords"))         # Palavras-chave
-    print(dados.get("cited_by_count"))   # Citações
-    print(dados.get("counts_by_year"))   # Histórico de citações
-    print(dados.get("primary_location")) # Veículo da publicação
+    for artigo in resultado["candidatos"]:
+        print(artigo["titulo"])
+        print(artigo["resumo"])
+        print("autores:", AlexService.extrair_autores(artigo))
+        print("genero:", artigo.get("genero"))
+        print("-" * 40)

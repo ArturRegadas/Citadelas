@@ -57,7 +57,7 @@ def genderize_name(name: str, country_id: Optional[str] = "BR") -> Dict[str, Any
 def genderize_names(
     names: List[str], country_id: Optional[str] = "BR"
 ) -> List[Dict[str, Any]]:
-    """Estima o gênero de uma lista de nomes em uma única chamada em lote."""
+   
     firsts = [_first_name(n) for n in names]
     valid = [(original, first) for original, first in zip(names, firsts) if first]
     if not valid:
