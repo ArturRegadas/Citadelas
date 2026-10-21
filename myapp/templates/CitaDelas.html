@@ -10,19 +10,37 @@
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/theme.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-topbar.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-drawer.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/recommend.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/theme.css') }}?v=20261021003228" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-topbar.css') }}?v=20261021003228" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-drawer.css') }}?v=20261021003228" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/recommend.css') }}?v=20261021003228" />
 </head>
 <body class="cd-body">
 
   {% with active='recomendar' %}{% include 'components/citadelas/Topbar.html' %}{% endwith %}
 
+  <!-- Sub-navegação entre as etapas (evita scroll) -->
+  <div class="cd-subnav">
+    <div class="cd-shell cd-subnav__inner">
+      <nav class="cd-viewtabs" role="tablist" aria-label="Etapas da recomendação">
+        <button id="cd-tabview-analisar" class="cd-viewtabs__btn is-active" role="tab" aria-selected="true" onclick="CitaDelasRecommend.switchView('analisar')">
+          <i class="fa-solid fa-file-pen" aria-hidden="true"></i> Analisar
+        </button>
+        <button id="cd-tabview-resultados" class="cd-viewtabs__btn" role="tab" aria-selected="false" onclick="CitaDelasRecommend.switchView('resultados')">
+          <i class="fa-solid fa-book-open" aria-hidden="true"></i> Recomendações
+          <span id="cd-tabview-count" class="cd-badge cd-badge--gold" hidden style="margin-left:4px"></span>
+        </button>
+      </nav>
+    </div>
+  </div>
+
   <main class="cd-shell cd-page">
 
+    <!-- ===== VIEW: ANALISAR (hero + formulário) ===== -->
+    <div id="cd-view-analisar" class="cd-view-section">
+
     <!-- HERO -->
-    <section class="cd-hero cd-card cd-card--accent" aria-labelledby="cd-hero-title">
+    <section class="cd-hero cd-card cd-card--accent" aria-labelledby="cd-hero-title" style="margin-bottom: 20px;">
       <div class="cd-hero__content">
         <span class="cd-badge cd-badge--gold">
           <i class="fa-solid fa-venus"></i> Ciência Delas · Efeito Matilda
@@ -160,6 +178,11 @@
       </form>
     </section>
 
+    </div><!-- /view analisar -->
+
+    <!-- ===== VIEW: RECOMENDAÇÕES ===== -->
+    <div id="cd-view-resultados" class="cd-view-section" hidden>
+
     <!-- RESULTADOS / ESTADOS -->
     <section class="cd-results" aria-labelledby="cd-results-title" aria-live="polite">
       <div class="cd-results__head">
@@ -228,12 +251,14 @@
         </a>
       </div>
     </section>
+
+    </div><!-- /view resultados -->
   </main>
 
   {% include 'components/citadelas/SavedDrawer.html' %}
   {% include 'components/citadelas/Toast.html' %}
 
-  <script src="{{ url_for('static', filename='js/components/CitaDelasShared.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/mains/CitaDelasRecommend.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/components/CitaDelasShared.js') }}?v=20261021003228"></script>
+  <script src="{{ url_for('static', filename='js/mains/CitaDelasRecommend.js') }}?v=20261021003228"></script>
 </body>
 </html>

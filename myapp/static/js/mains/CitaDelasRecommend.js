@@ -12,6 +12,7 @@
 
   /* ---------- Estado único e agrupado ---------- */
   const state = {
+    view: "analisar", // "analisar" | "resultados"
     mode: "file", // "file" | "manual"
     file: null,
     tags: ["viés de gênero", "educação"],
@@ -78,6 +79,25 @@
 
   /* ---------- Atalhos de DOM ---------- */
   const $ = (id) => document.getElementById(id);
+
+  /* ====================== NAVEGAÇÃO POR ABAS ====================== */
+  function switchView(view) {
+    state.view = view;
+    ["analisar", "resultados"].forEach((v) => {
+      const section = $(`cd-view-${v}`);
+      section.hidden = v !== view;
+      const btn = $(`cd-tabview-${v}`);
+      btn.classList.toggle("is-active", v === view);
+      btn.setAttribute("aria-selected", String(v === view));
+      // Reaplica a animação de entrada na seção que passa a aparecer.
+      if (v === view) {
+        section.style.animation = "none";
+        void section.offsetWidth; // força reflow
+        section.style.animation = "";
+      }
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   /* ====================== MODO DO FORMULÁRIO ====================== */
   function setMode(mode) {
@@ -216,8 +236,9 @@
         state.error = null;
         setPhase("done");
         render();
+        updateTabCount();
+        switchView("resultados");
         Shared.toast("Recomendações geradas.");
-        $("cd-results-title").scrollIntoView({ behavior: "smooth", block: "start" });
       } catch (err) {
         showError("Erro ao processar", "Tente novamente em instantes.");
       }
@@ -234,6 +255,13 @@
 
   function retry() {
     run();
+  }
+
+  function updateTabCount() {
+    const badge = $("cd-tabview-count");
+    if (!badge) return;
+    badge.textContent = String(state.results.length);
+    badge.hidden = state.results.length === 0;
   }
 
   /* ====================== RENDER DOS RESULTADOS ====================== */
@@ -341,6 +369,7 @@
     renderTags();
     setMode("file");
     setPhase("empty");
+    switchView("analisar");
 
     // Dropzone
     const dz = $("cd-dropzone");
@@ -392,5 +421,5 @@
     $("cd-papers").addEventListener("click", handleResultsClick);
   });
 
-  window.CitaDelasRecommend = { setMode, clearFile, loadSample, render, retry };
+  window.CitaDelasRecommend = { setMode, clearFile, loadSample, render, retry, switchView };
 })();

@@ -284,7 +284,8 @@
   box-shadow: var(--cd-shadow-soft);
 }
 .cd-card--accent {
-  border-left: 4px solid var(--cd-accent);
+  /* acento sutil no topo, sem barra lateral chamativa */
+  border-top: 2px solid var(--cd-accent);
 }
 .cd-card--hover {
   transition:
@@ -499,6 +500,54 @@
   }
 }
 
+/* ---------- Abas de navegação de seções (sub-barra) ---------- */
+.cd-subnav {
+  position: sticky;
+  top: 72px;
+  z-index: 40;
+  background: rgba(27, 23, 18, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--cd-line-soft);
+}
+.cd-subnav__inner { padding-top: 10px; padding-bottom: 10px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.cd-viewtabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 5px;
+  background: var(--cd-ink-850);
+  border: 1px solid var(--cd-line-soft);
+  border-radius: var(--cd-r-md);
+  flex-wrap: wrap;
+}
+.cd-viewtabs__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--cd-font);
+  font-size: 0.77rem;
+  font-weight: 600;
+  padding: 8px 15px;
+  border: none;
+  background: none;
+  color: var(--cd-text-dim);
+  border-radius: var(--cd-r-sm);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.cd-viewtabs__btn:hover { color: var(--cd-text); }
+.cd-viewtabs__btn.is-active { background: var(--cd-accent-strong); color: #fff; }
+/* ---------- Entrada suave de views/seções ---------- */
+@keyframes cd-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.cd-view-section,
+.cd-view {
+  animation: cd-fade-in 0.28s ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cd-view-section, .cd-view { animation: none; }
+}
 /* ---------- Toast ---------- */
 .cd-toast {
   position: fixed;

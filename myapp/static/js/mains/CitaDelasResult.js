@@ -21,30 +21,41 @@
   };
 
   const METRICS = ["similarity", "problem_fit", "freshness", "openalex_relevance", "reliability"];
+  const MAX_CARDS = 4; // mostra no máximo 4 cards (grid 2x2 simétrico)
+  const CHART_GROUPS = {
+    desempenho: ["similarity", "problem_fit", "freshness"],
+    qualidade: ["openalex_relevance", "reliability"],
+    genero: ["gender"],
+  };
 
   /* ---------- Estado único ---------- */
   const state = {
     view: "results",
     filters: { search: "", openAccess: false, female: false, minYear: 2020, sort: "score" },
-    selected: [],
+    selected: ((Data && Data.recommendations) || []).slice(0, 3).map((r) => r.id),
     chartTypes: { similarity: "radar", problem_fit: "doughnut", freshness: "bar", openalex_relevance: "polarArea", reliability: "doughnut" },
     pdfPage: 1,
     activeCitation: null,
+    chartGroup: "desempenho",
   };
 
   /* ====================== VIEWS ====================== */
-  function switchView(view) {
-    state.view = view;
+  // Rola suavemente até a seção, compensando a altura da sub-barra fixa.
+  function scrollToView(view) {
+    const section = $(`cd-view-${view}`);
+    if (!section) return;
+    setActiveTab(view);
+    const subnav = document.querySelector(".cd-subnav");
+    const offset = (subnav ? subnav.offsetHeight : 0) + 80; // + topbar
+    const y = section.getBoundingClientRect().top + window.pageYOffset - offset;
+    window.scrollTo({ top: y, behavior: "smooth" });
+  }
+
+  function setActiveTab(view) {
     ["results", "compare", "pdf"].forEach((v) => {
-      $(`cd-view-${v}`).hidden = v !== view;
       const btn = $(`cd-vt-${v}`);
-      btn.classList.toggle("is-active", v === view);
-      btn.setAttribute("aria-selected", String(v === view));
+      if (btn) btn.classList.toggle("is-active", v === view);
     });
-    if (view === "compare") {
-      renderSelectors();
-      renderCharts();
-    }
   }
 
   /* ====================== RECOMENDAÇÕES ====================== */
@@ -91,8 +102,9 @@
   function applyFilters() {
     readFilters();
     const list = filteredList();
-    $("cd-r-count").textContent = String(list.length);
-    renderRecommendations(list);
+    const shown = list.slice(0, MAX_CARDS);
+    $("cd-r-count").textContent = String(shown.length);
+    renderRecommendations(shown);
   }
 
   function renderRecommendations(items) {
@@ -275,22 +287,42 @@
     renderCharts();
   }
 
+  function switchChartGroup(group) {
+    state.chartGroup = group;
+    document.querySelectorAll(".cd-chart-group").forEach((el) => {
+      el.hidden = el.getAttribute("data-group") !== group;
+    });
+    document.querySelectorAll("[data-chart-group]").forEach((btn) => {
+      const active = btn.getAttribute("data-chart-group") === group;
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-selected", String(active));
+    });
+    renderCharts();
+  }
+
   function renderCharts() {
     const active = Data.recommendations.filter((r) => state.selected.includes(r.id));
     const empty = active.length === 0;
-    $("cd-compare-empty").hidden = !empty;
-    $("cd-charts").style.display = empty ? "none" : "grid";
+    const emptyEl = $("cd-compare-empty");
+    const chartsEl = $("cd-charts");
+    if (emptyEl) emptyEl.hidden = !empty;
+    if (chartsEl) chartsEl.style.display = empty ? "none" : "block";
     if (empty) return;
 
     const labels = active.map((r) => r.shortLabel);
-    METRICS.forEach((m) => {
+    const visibleMetrics = CHART_GROUPS[state.chartGroup] || METRICS;
+
+    METRICS.filter((m) => visibleMetrics.includes(m)).forEach((m) => {
       const values = active.map((r) => r.metrics[m]);
       Charts.metricChart(`cd-chart-${m}`, state.chartTypes[m], labels, values);
       const top = [...active].sort((a, b) => b.metrics[m] - a.metrics[m])[0];
       const winnerEl = document.querySelector(`[data-winner="${m}"]`);
       if (winnerEl) winnerEl.textContent = `${top.shortLabel} (${top.metrics[m]}%)`;
     });
-    Charts.genderStacked("cd-chart-gender", labels, active.map((r) => r.gender.women), active.map((r) => r.gender.men));
+
+    if (visibleMetrics.includes("gender")) {
+      Charts.genderStacked("cd-chart-gender", labels, active.map((r) => r.gender.women), active.map((r) => r.gender.men));
+    }
   }
 
   /* ====================== ONDE CITAR (PDF) ====================== */
@@ -383,8 +415,33 @@
 
   /* ====================== BIND ====================== */
   document.addEventListener("DOMContentLoaded", () => {
-    applyFilters();
-    renderPdf();
+    try {
+      applyFilters();
+      renderPdf();
+      renderSelectors();
+      renderCharts();
+    } catch (err) {
+      console.error("CitaDelas: falha no render inicial", err);
+    }
+
+    // Scroll spy: destaca o botão da seção que está visível na tela.
+    const spyTargets = ["results", "compare", "pdf"]
+      .map((v) => $(`cd-view-${v}`))
+      .filter(Boolean);
+    if ("IntersectionObserver" in window && spyTargets.length) {
+      const spy = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const v = entry.target.id.replace("cd-view-", "");
+              setActiveTab(v);
+            }
+          });
+        },
+        { rootMargin: "-45% 0px -45% 0px", threshold: 0 }
+      );
+      spyTargets.forEach((el) => spy.observe(el));
+    }
 
     $("cd-reclist").addEventListener("click", handleRecClick);
 
@@ -419,5 +476,5 @@
     $("cd-doc-content").addEventListener("keydown", focusHandler);
   });
 
-  window.CitaDelasResult = { switchView, applyFilters, resetFilters, onYearInput, changePage };
+  window.CitaDelasResult = { scrollToView, applyFilters, resetFilters, onYearInput, changePage, switchChartGroup };
 })();

@@ -11,10 +11,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/theme.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-topbar.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-drawer.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/result.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/theme.css') }}?v=20261021003228" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-topbar.css') }}?v=20261021003228" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-drawer.css') }}?v=20261021003228" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/result.css') }}?v=20261021003228" />
 </head>
 <body class="cd-body">
 
@@ -23,14 +23,14 @@
   <!-- Sub-navegação entre as views do painel -->
   <div class="cd-subnav">
     <div class="cd-shell cd-subnav__inner">
-      <nav class="cd-viewtabs" role="tablist" aria-label="Seções do painel">
-        <button id="cd-vt-results" class="cd-viewtabs__btn is-active" role="tab" aria-selected="true" onclick="CitaDelasResult.switchView('results')">
+      <nav class="cd-viewtabs" aria-label="Ir para seção do painel">
+        <button type="button" id="cd-vt-results" class="cd-viewtabs__btn is-active" onclick="CitaDelasResult.scrollToView('results')">
           <i class="fa-solid fa-layer-group" aria-hidden="true"></i> Recomendações
         </button>
-        <button id="cd-vt-compare" class="cd-viewtabs__btn" role="tab" aria-selected="false" onclick="CitaDelasResult.switchView('compare')">
+        <button type="button" id="cd-vt-compare" class="cd-viewtabs__btn" onclick="CitaDelasResult.scrollToView('compare')">
           <i class="fa-solid fa-chart-column" aria-hidden="true"></i> Comparar
         </button>
-        <button id="cd-vt-pdf" class="cd-viewtabs__btn" role="tab" aria-selected="false" onclick="CitaDelasResult.switchView('pdf')">
+        <button type="button" id="cd-vt-pdf" class="cd-viewtabs__btn" onclick="CitaDelasResult.scrollToView('pdf')">
           <i class="fa-regular fa-file-lines" aria-hidden="true"></i> Onde citar
         </button>
       </nav>
@@ -40,7 +40,7 @@
   <main class="cd-shell cd-panel">
 
     <!-- ============ VIEW: RECOMENDAÇÕES ============ -->
-    <section id="cd-view-results" class="cd-view" role="tabpanel" aria-label="Recomendações">
+    <section id="cd-view-results" class="cd-view" aria-label="Recomendações">
       <div class="cd-view__banner cd-card cd-card--accent">
         <div>
           <span class="cd-kicker">Resultado da análise</span>
@@ -109,7 +109,7 @@
     </section>
 
     <!-- ============ VIEW: COMPARAR ============ -->
-    <section id="cd-view-compare" class="cd-view" role="tabpanel" aria-label="Comparação" hidden>
+    <section id="cd-view-compare" class="cd-view" aria-label="Comparação">
       <div class="cd-card cd-compare__picker">
         <div class="cd-compare__picker-head">
           <div>
@@ -128,47 +128,71 @@
         <p class="cd-state__desc">Marque as recomendações acima para visualizar os gráficos comparativos.</p>
       </div>
 
-      <div id="cd-charts" class="cd-charts">
-        <div class="cd-metric cd-card" data-metric="similarity">
-          <div class="cd-metric__head"><h3><i class="fa-solid fa-bullseye" style="color:var(--cd-accent)"></i> Similaridade</h3>
-            <select class="cd-select cd-select--sm" data-chart-type="similarity"><option value="radar">Radar</option><option value="bar">Barras</option><option value="horizontalBar">Barras H.</option><option value="doughnut">Rosca</option></select></div>
-          <div class="cd-metric__canvas"><canvas id="cd-chart-similarity"></canvas></div>
-          <div class="cd-metric__winner">Destaque: <strong data-winner="similarity">—</strong></div>
+      <!-- Sub-abas por grupo de métricas (evita empilhar 6 gráficos) -->
+      <div class="cd-metric-tabs" role="tablist" aria-label="Grupos de métricas">
+        <button type="button" class="cd-metric-tabs__btn is-active" role="tab" aria-selected="true" data-chart-group="desempenho" onclick="CitaDelasResult.switchChartGroup('desempenho')">
+          <i class="fa-solid fa-gauge-high" aria-hidden="true"></i> Desempenho
+        </button>
+        <button type="button" class="cd-metric-tabs__btn" role="tab" aria-selected="false" data-chart-group="qualidade" onclick="CitaDelasResult.switchChartGroup('qualidade')">
+          <i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Qualidade
+        </button>
+        <button type="button" class="cd-metric-tabs__btn" role="tab" aria-selected="false" data-chart-group="genero" onclick="CitaDelasResult.switchChartGroup('genero')">
+          <i class="fa-solid fa-venus-mars" aria-hidden="true"></i> Gênero
+        </button>
+      </div>
+
+      <div id="cd-charts">
+        <!-- GRUPO: DESEMPENHO -->
+        <div class="cd-charts cd-chart-group" data-group="desempenho">
+          <div class="cd-metric cd-card" data-metric="similarity">
+            <div class="cd-metric__head"><h3><i class="fa-solid fa-bullseye" style="color:var(--cd-accent)"></i> Similaridade</h3>
+              <select class="cd-select cd-select--sm" data-chart-type="similarity"><option value="radar">Radar</option><option value="bar">Barras</option><option value="horizontalBar">Barras H.</option><option value="doughnut">Rosca</option></select></div>
+            <div class="cd-metric__canvas"><canvas id="cd-chart-similarity"></canvas></div>
+            <div class="cd-metric__winner">Destaque: <strong data-winner="similarity">—</strong></div>
+          </div>
+          <div class="cd-metric cd-card" data-metric="problem_fit">
+            <div class="cd-metric__head"><h3><i class="fa-solid fa-magnifying-glass" style="color:var(--cd-gold)"></i> Aderência ao problema</h3>
+              <select class="cd-select cd-select--sm" data-chart-type="problem_fit"><option value="doughnut">Rosca</option><option value="bar">Barras</option><option value="horizontalBar">Barras H.</option><option value="radar">Radar</option></select></div>
+            <div class="cd-metric__canvas"><canvas id="cd-chart-problem_fit"></canvas></div>
+            <div class="cd-metric__winner">Destaque: <strong data-winner="problem_fit">—</strong></div>
+          </div>
+          <div class="cd-metric cd-card" data-metric="freshness">
+            <div class="cd-metric__head"><h3><i class="fa-solid fa-clock-rotate-left" style="color:var(--cd-teal)"></i> Atualidade</h3>
+              <select class="cd-select cd-select--sm" data-chart-type="freshness"><option value="bar">Barras</option><option value="horizontalBar">Barras H.</option><option value="line">Linha</option><option value="doughnut">Rosca</option></select></div>
+            <div class="cd-metric__canvas"><canvas id="cd-chart-freshness"></canvas></div>
+            <div class="cd-metric__winner">Destaque: <strong data-winner="freshness">—</strong></div>
+          </div>
         </div>
-        <div class="cd-metric cd-card" data-metric="problem_fit">
-          <div class="cd-metric__head"><h3><i class="fa-solid fa-magnifying-glass" style="color:var(--cd-gold)"></i> Aderência ao problema</h3>
-            <select class="cd-select cd-select--sm" data-chart-type="problem_fit"><option value="doughnut">Rosca</option><option value="bar">Barras</option><option value="horizontalBar">Barras H.</option><option value="radar">Radar</option></select></div>
-          <div class="cd-metric__canvas"><canvas id="cd-chart-problem_fit"></canvas></div>
-          <div class="cd-metric__winner">Destaque: <strong data-winner="problem_fit">—</strong></div>
+
+        <!-- GRUPO: QUALIDADE -->
+        <div class="cd-charts cd-chart-group" data-group="qualidade" hidden>
+          <div class="cd-metric cd-card" data-metric="openalex_relevance">
+            <div class="cd-metric__head"><h3><i class="fa-solid fa-globe" style="color:var(--cd-info)"></i> Relevância OpenAlex</h3>
+              <select class="cd-select cd-select--sm" data-chart-type="openalex_relevance"><option value="polarArea">Área polar</option><option value="bar">Barras</option><option value="doughnut">Rosca</option></select></div>
+            <div class="cd-metric__canvas"><canvas id="cd-chart-openalex_relevance"></canvas></div>
+            <div class="cd-metric__winner">Destaque: <strong data-winner="openalex_relevance">—</strong></div>
+          </div>
+          <div class="cd-metric cd-card" data-metric="reliability">
+            <div class="cd-metric__head"><h3><i class="fa-solid fa-shield-halved" style="color:var(--cd-green)"></i> Confiabilidade</h3>
+              <select class="cd-select cd-select--sm" data-chart-type="reliability"><option value="doughnut">Rosca</option><option value="bar">Barras</option><option value="horizontalBar">Barras H.</option></select></div>
+            <div class="cd-metric__canvas"><canvas id="cd-chart-reliability"></canvas></div>
+            <div class="cd-metric__winner">Destaque: <strong data-winner="reliability">—</strong></div>
+          </div>
         </div>
-        <div class="cd-metric cd-card" data-metric="freshness">
-          <div class="cd-metric__head"><h3><i class="fa-solid fa-clock-rotate-left" style="color:var(--cd-teal)"></i> Atualidade</h3>
-            <select class="cd-select cd-select--sm" data-chart-type="freshness"><option value="bar">Barras</option><option value="horizontalBar">Barras H.</option><option value="line">Linha</option><option value="doughnut">Rosca</option></select></div>
-          <div class="cd-metric__canvas"><canvas id="cd-chart-freshness"></canvas></div>
-          <div class="cd-metric__winner">Destaque: <strong data-winner="freshness">—</strong></div>
-        </div>
-        <div class="cd-metric cd-card" data-metric="openalex_relevance">
-          <div class="cd-metric__head"><h3><i class="fa-solid fa-globe" style="color:var(--cd-info)"></i> Relevância OpenAlex</h3>
-            <select class="cd-select cd-select--sm" data-chart-type="openalex_relevance"><option value="polarArea">Área polar</option><option value="bar">Barras</option><option value="doughnut">Rosca</option></select></div>
-          <div class="cd-metric__canvas"><canvas id="cd-chart-openalex_relevance"></canvas></div>
-          <div class="cd-metric__winner">Destaque: <strong data-winner="openalex_relevance">—</strong></div>
-        </div>
-        <div class="cd-metric cd-card" data-metric="reliability">
-          <div class="cd-metric__head"><h3><i class="fa-solid fa-shield-halved" style="color:var(--cd-green)"></i> Confiabilidade</h3>
-            <select class="cd-select cd-select--sm" data-chart-type="reliability"><option value="doughnut">Rosca</option><option value="bar">Barras</option><option value="horizontalBar">Barras H.</option></select></div>
-          <div class="cd-metric__canvas"><canvas id="cd-chart-reliability"></canvas></div>
-          <div class="cd-metric__winner">Destaque: <strong data-winner="reliability">—</strong></div>
-        </div>
-        <div class="cd-metric cd-card cd-metric--wide" data-metric="gender">
-          <div class="cd-metric__head"><h3><i class="fa-solid fa-venus-mars" style="color:var(--cd-rose)"></i> Composição de gênero das autorias</h3>
-            <span class="cd-badge">Empilhado</span></div>
-          <div class="cd-metric__canvas cd-metric__canvas--wide"><canvas id="cd-chart-gender"></canvas></div>
+
+        <!-- GRUPO: GÊNERO -->
+        <div class="cd-charts cd-chart-group" data-group="genero" hidden>
+          <div class="cd-metric cd-card cd-metric--wide" data-metric="gender">
+            <div class="cd-metric__head"><h3><i class="fa-solid fa-venus-mars" style="color:var(--cd-rose)"></i> Composição de gênero das autorias</h3>
+              <span class="cd-badge">Empilhado</span></div>
+            <div class="cd-metric__canvas cd-metric__canvas--wide"><canvas id="cd-chart-gender"></canvas></div>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- ============ VIEW: ONDE CITAR (PDF) ============ -->
-    <section id="cd-view-pdf" class="cd-view" role="tabpanel" aria-label="Onde citar" hidden>
+    <section id="cd-view-pdf" class="cd-view" aria-label="Onde citar">
       <div class="cd-card cd-pdfhead">
         <div class="cd-pdfhead__title">
           <span class="cd-pdfhead__icon" aria-hidden="true"><i class="fa-regular fa-file-lines"></i></span>
@@ -241,9 +265,9 @@
   {% include 'components/citadelas/SavedDrawer.html' %}
   {% include 'components/citadelas/Toast.html' %}
 
-  <script src="{{ url_for('static', filename='js/components/CitaDelasShared.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/components/CitaDelasData.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/components/CitaDelasCharts.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/mains/CitaDelasResult.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/components/CitaDelasShared.js') }}?v=20261021003228"></script>
+  <script src="{{ url_for('static', filename='js/components/CitaDelasData.js') }}?v=20261021003228"></script>
+  <script src="{{ url_for('static', filename='js/components/CitaDelasCharts.js') }}?v=20261021003228"></script>
+  <script src="{{ url_for('static', filename='js/mains/CitaDelasResult.js') }}?v=20261021003228"></script>
 </body>
 </html>
