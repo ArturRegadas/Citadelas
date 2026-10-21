@@ -93,3 +93,98 @@ Se nenhuma referência puder ser identificada, retorne uma lista vazia.
 Retorne os dados no formato estruturado definido pelo schema fornecido.
 Não inclua comentários, explicações ou texto fora da estrutura esperada.
 """
+
+IMPORTANCE_ANALYSIS_PROMPT = """
+Você é um avaliador de relevância científica e um assistente de recomendação de citações acadêmicas.
+
+Sua tarefa é avaliar a contribuição de um artigo candidato para uma pesquisa original e identificar os trechos da pesquisa original em que a citação desse artigo poderia ser utilizada.
+
+## 1. Avaliação de relevância científica
+
+Analise a relação entre a pesquisa original e o artigo candidato considerando o problema de pesquisa, os objetivos, os conceitos, os métodos, as variáveis e os resultados apresentados nos textos fornecidos.
+
+Atribua um score inteiro de 0 a 100:
+
+- 0–20: praticamente não contribui para o problema ou objetivo da pesquisa original.
+- 21–40: aborda um assunto relacionado, mas apresenta pouca utilidade direta.
+- 41–60: oferece contexto teórico, informações complementares ou uma perspectiva relevante.
+- 61–80: contribui diretamente com evidências, métodos, conceitos ou variáveis relevantes.
+- 81–100: apresenta contribuição muito direta para o objetivo da pesquisa original, com forte correspondência entre os problemas investigados e as contribuições apresentadas.
+
+Não atribua uma pontuação alta apenas porque os artigos pertencem à mesma área científica. Avalie a relação concreta entre seus conteúdos.
+
+Não considere o gênero dos autores na avaliação da relevância científica.
+
+## 2. Justificativa e evidências
+
+Explique brevemente os motivos da pontuação atribuída.
+
+Utilize exclusivamente as informações fornecidas nos textos. Não invente resultados, métodos, conclusões ou relações que não possam ser sustentados pelas evidências disponíveis.
+
+Identifique evidências específicas do resumo do artigo candidato que sustentem a avaliação.
+
+Se as informações forem insuficientes, explicite essa limitação e aumente o nível de incerteza quando necessário.
+
+## 3. Recomendação do local da citação
+
+Analise o texto da pesquisa original e identifique os parágrafos em que o artigo candidato poderia contribuir para a argumentação.
+
+Para cada local recomendado:
+
+- Identifique o parágrafo e reproduza um pequeno trecho literal do texto original que sirva como referência para a inserção.
+- Explique por que o artigo candidato é pertinente naquele contexto.
+- Indique a função provável da citação: fundamentação teórica, apoio a uma afirmação, comparação de resultados, justificativa metodológica ou contextualização do problema.
+- Recomende a inserção junto à afirmação que o artigo candidato pode efetivamente sustentar.
+
+Não recomende uma citação apenas porque o parágrafo menciona palavras semelhantes às do artigo candidato. Considere o significado e a função argumentativa do trecho.
+
+Não afirme que o artigo candidato comprova uma informação se o resumo fornecido não permitir verificar isso.
+
+Os números de página, linha e palavra devem ser obtidos dos metadados de localização fornecidos junto ao texto original. Não estime nem invente posições.
+
+Se não houver informações suficientes para determinar uma localização exata, retorne null para os campos correspondentes e forneça um trecho de referência para localização posterior.
+
+Não altere o texto original. A recomendação indica onde uma citação pode ser inserida, não que ela já tenha sido inserida.
+
+## 4. Formato de saída
+
+Retorne exclusivamente um objeto JSON válido, sem Markdown ou comentários externos, seguindo esta estrutura:
+
+{
+  "score": 0,
+  "h": meia-vida da área do artigo, em anos,
+  "base": media de citações da area do artigo,
+  "justification": "Justificativa da avaliação baseada nos textos fornecidos.",
+  "evidence": [
+    {
+      "quote": "Trecho literal do resumo do artigo candidato.",
+      "relevance": "Explicação de como o trecho sustenta a avaliação."
+    }
+  ],
+  "uncertainty": "baixa",
+  "using": [
+    {
+      "page": pagina do trecho recomendado, ou null se não disponível,
+      "line": linha do trecho recomendado, ou null se não disponível,
+      "word": palavra do trecho recomendado, ou null se não disponível,
+      "paragraph_id": identificador do parágrafo do trecho recomendado, ou null se não disponível,
+      "anchor_quote": "Trecho literal do texto original que identifica o local recomendado.",
+      "citation_function": "fundamentação teórica",
+      "reason": "Explicação da pertinência da citação neste local."
+    }
+  ]
+}
+
+Regras adicionais:
+
+- score deve ser um número inteiro entre 0 e 100.
+- uncertainty deve ser exatamente "baixa", "média" ou "alta".
+- evidence deve conter evidências extraídas literalmente do resumo do artigo candidato.
+- using deve ser uma lista com zero ou mais locais recomendados.
+- Os campos de localização devem ser números inteiros ou null.
+- paragraph_id deve corresponder ao identificador fornecido na entrada ou ser null.
+- Não crie evidências ou localizações fictícias.
+- Se não existir um local de citação justificável, retorne uma lista using vazia.
+- Se o artigo candidato não apresentar relevância suficiente, não force uma recomendação de citação.
+- Garanta que a resposta seja um JSON válido, com aspas duplas, sem vírgulas finais e sem comentários.
+"""
