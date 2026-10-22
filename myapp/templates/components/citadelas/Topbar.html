@@ -7,14 +7,10 @@
 <header class="cd-topbar">
   <div class="cd-shell cd-topbar__inner">
     <a class="cd-topbar__brand" href="{{ url_for('citaDelasPage.CitaDelasPage') }}" aria-label="Ir para a página inicial do CitaDelas">
-      <span class="cd-topbar__mark" aria-hidden="true">
-        <i class="fa-solid fa-quote-left"></i>
-      </span>
+      {% include 'components/citadelas/LogoMark.html' %}
       <span class="cd-topbar__title">
-        <span class="cd-topbar__name">
-          Cita<span class="cd-topbar__name-accent">Delas</span>
-        </span>
-        <span class="cd-topbar__tag">Visibilidade feminina nas citações científicas</span>
+        <span class="cd-logo__word cd-topbar__name">CITA<em>delas</em></span>
+        <span class="cd-topbar__tag">Citações e Visibilidade Feminina</span>
       </span>
     </a>
 
@@ -22,19 +18,13 @@
       <a href="{{ url_for('citaDelasPage.CitaDelasPage') }}"
          class="cd-topbar__link {{ 'is-active' if active == 'recomendar' else '' }}"
          {{ 'aria-current=page' if active == 'recomendar' else '' }}>
-        <i class="fa-solid fa-book-open" aria-hidden="true"></i>
-        <span>Recomendar</span>
-      </a>
-      <a href="{{ url_for('citaDelasResultPage.CitaDelasResultPage') }}"
-         class="cd-topbar__link {{ 'is-active' if active == 'resultado' else '' }}"
-         {{ 'aria-current=page' if active == 'resultado' else '' }}>
-        <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
-        <span>Recomendações</span>
+        <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
+        <span>Analisar</span>
       </a>
     </nav>
 
     <button type="button" class="cd-btn cd-btn--soft cd-topbar__saved" onclick="window.CitaDelasShared?.toggleSavedDrawer()">
-      <i class="fa-solid fa-bookmark" aria-hidden="true" style="color: var(--cd-gold);"></i>
+      <i class="fa-solid fa-bookmark" aria-hidden="true" style="color: var(--cd-purple);"></i>
       <span class="cd-topbar__saved-text">Minhas citações</span>
       <span class="cd-topbar__counter" id="cd-saved-counter" aria-live="polite">{{ saved | default(0) }}</span>
     </button>

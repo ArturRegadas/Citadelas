@@ -10,232 +10,100 @@
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/theme.css') }}?v=20261021003228" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-topbar.css') }}?v=20261021003228" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-drawer.css') }}?v=20261021003228" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/recommend.css') }}?v=20261021003228" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/theme.css') }}?v=20261022" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-topbar.css') }}?v=20261022" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-drawer.css') }}?v=20261022" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/recommend.css') }}?v=20261022" />
 </head>
 <body class="cd-body">
 
   {% with active='recomendar' %}{% include 'components/citadelas/Topbar.html' %}{% endwith %}
 
-  <!-- Sub-navegação entre as etapas (evita scroll) -->
-  <div class="cd-subnav">
-    <div class="cd-shell cd-subnav__inner">
-      <nav class="cd-viewtabs" role="tablist" aria-label="Etapas da recomendação">
-        <button id="cd-tabview-analisar" class="cd-viewtabs__btn is-active" role="tab" aria-selected="true" onclick="CitaDelasRecommend.switchView('analisar')">
-          <i class="fa-solid fa-file-pen" aria-hidden="true"></i> Analisar
-        </button>
-        <button id="cd-tabview-resultados" class="cd-viewtabs__btn" role="tab" aria-selected="false" onclick="CitaDelasRecommend.switchView('resultados')">
-          <i class="fa-solid fa-book-open" aria-hidden="true"></i> Recomendações
-          <span id="cd-tabview-count" class="cd-badge cd-badge--gold" hidden style="margin-left:4px"></span>
-        </button>
-      </nav>
-    </div>
-  </div>
-
-  <main class="cd-shell cd-page">
-
-    <!-- ===== VIEW: ANALISAR (hero + formulário) ===== -->
-    <div id="cd-view-analisar" class="cd-view-section">
+  <main class="cd-shell cd-landing">
 
     <!-- HERO -->
-    <section class="cd-hero cd-card cd-card--accent" aria-labelledby="cd-hero-title" style="margin-bottom: 20px;">
-      <div class="cd-hero__content">
-        <span class="cd-badge cd-badge--gold">
-          <i class="fa-solid fa-venus"></i> Ciência Delas · Efeito Matilda
-        </span>
-        <h1 class="cd-hero__title" id="cd-hero-title">
-          Cite as <span class="cd-hero__accent cd-serif">pesquisadoras</span> que a sua área esqueceu de citar.
-        </h1>
-        <p class="cd-hero__lead">
-          Envie o artigo em que você está trabalhando. O CitaDelas analisa o contexto com o Gemini,
-          busca trabalhos relacionados no OpenAlex e destaca produções com provável autoria feminina
-          para você referenciar com segurança.
-        </p>
-        <ul class="cd-hero__points">
-          <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Análise de contexto do seu PDF ou texto</li>
-          <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Busca cruzada no acervo OpenAlex</li>
-          <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Estimativa de gênero por nome (probabilística)</li>
-        </ul>
+    <section class="cd-hero cd-fade" aria-labelledby="cd-hero-title">
+      <div class="cd-hero__brand" aria-hidden="true">
+        {% include 'components/citadelas/LogoMark.html' %}
       </div>
+      <span class="cd-badge cd-badge--purple">
+        <i class="fa-solid fa-venus"></i> Visibilidade feminina · Efeito Matilda
+      </span>
+      <h1 class="cd-hero__title" id="cd-hero-title">
+        Cite as <span class="cd-serif cd-hero__accent">pesquisadoras</span>
+        que a sua área esqueceu de citar.
+      </h1>
+      <p class="cd-hero__lead">
+        Envie o artigo em que está trabalhando. O CitaDelas lê o contexto,
+        cruza trabalhos relacionados no OpenAlex e destaca produções com
+        provável autoria feminina para você referenciar com segurança.
+      </p>
 
-      <aside class="cd-hero__card" aria-label="Exemplo de recomendação">
-        <div class="cd-hero__card-top">
-          <span class="cd-kicker"><i class="fa-solid fa-star" aria-hidden="true"></i> Exemplo real</span>
-          <span class="cd-stamp">96% aderência</span>
-        </div>
-        <h2 class="cd-hero__card-title cd-clamp-2 cd-break">
-          Oficinas de computação desplugada e o interesse de meninas por STEM
-        </h2>
-        <p class="cd-hero__card-author cd-clamp-1 cd-break">Dra. Ana Paula Silva · UFPE · 2024</p>
-        <blockquote class="cd-hero__quote cd-serif cd-break cd-clamp-3">
-          “Atividades sem computador reduziram a barreira inicial e aumentaram a intenção de continuar estudando programação.”
-        </blockquote>
-        <div class="cd-hero__card-foot">
-          <span><i class="fa-solid fa-quote-right" aria-hidden="true"></i> 84 citações</span>
-          <button type="button" class="cd-btn cd-btn--sm cd-btn--ghost" onclick="CitaDelasRecommend.loadSample()">
-            Usar no formulário <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-          </button>
-        </div>
-      </aside>
+      <ul class="cd-hero__steps">
+        <li><span class="cd-hero__num">1</span> Análise de contexto do PDF ou TXT</li>
+        <li><span class="cd-hero__num">2</span> Busca cruzada no acervo OpenAlex</li>
+        <li><span class="cd-hero__num">3</span> Estimativa de gênero por nome</li>
+      </ul>
     </section>
 
-    <!-- FORMULÁRIO -->
-    <section class="cd-card cd-form" aria-labelledby="cd-form-title">
-      <div class="cd-form__head">
-        <div class="cd-section-head">
-          <span class="cd-form__head-icon" aria-hidden="true"><i class="fa-solid fa-file-pen"></i></span>
-          <div>
-            <h2 class="cd-form__title" id="cd-form-title">Análise do seu manuscrito</h2>
-            <p class="cd-form__sub">Envie o arquivo do artigo ou descreva a pesquisa manualmente.</p>
-          </div>
-        </div>
-
-        <div class="cd-toggle" role="tablist" aria-label="Como fornecer os dados da pesquisa">
-          <button type="button" id="cd-tab-file" class="cd-toggle__btn is-active" role="tab" aria-selected="true" aria-controls="cd-panel-file" onclick="CitaDelasRecommend.setMode('file')">
-            <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i> Enviar arquivo
-          </button>
-        </div>
+    <!-- UPLOAD -->
+    <section class="cd-upload cd-card cd-fade" aria-labelledby="cd-form-title">
+      <div class="cd-upload__head">
+        <h2 class="cd-upload__title" id="cd-form-title">Envie o seu manuscrito</h2>
+        <p class="cd-upload__sub">PDF ou TXT, até 15 MB. A análise leva alguns instantes.</p>
       </div>
 
-      <hr class="cd-rule" />
+      <form id="cd-form" method="POST" action="{{ url_for('getPDFPage.getPDFPage') }}"
+            enctype="multipart/form-data" novalidate>
 
-      <form id="cd-form" method="POST" action="/pdf/page"
-      enctype="multipart/form-data" novalidate>
-
-        <div id="cd-panel-file" class="cd-form__panel"
-            role="tabpanel" aria-labelledby="cd-tab-file">
-
-            <div class="cd-field">
-                <label class="cd-label" for="cd-file-input">
-                    Artigo em PDF ou TXT <span class="cd-req">*</span>
-                </label>
-
-                <button type="button" id="cd-dropzone" class="cd-dropzone">
-                    <input
-                        type="file"
-                        id="cd-file-input"
-                        name="pdf_file"
-                        accept=".pdf,.txt"
-                        class="cd-sr-only"
-                        required
-                    />
-
-                    <span class="cd-dropzone__icon" aria-hidden="true">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                    </span>
-
-                    <span class="cd-dropzone__text">
-                        <strong>Clique para selecionar</strong>
-                        ou arraste o arquivo aqui
-                    </span>
-
-                    <span class="cd-dropzone__hint">
-                        PDF ou TXT · até 15 MB
-                    </span>
-                </button>
-            </div>
-        </div>
-
-        <hr class="cd-rule" />
-
-        <div class="cd-form__foot">
-            <p class="cd-form__note">
-                A estimativa de gênero é probabilística e não confirma
-                a identidade das autoras.
-            </p>
-
-            <button id="cd-analyze" type="submit"
-                    class="cd-btn cd-btn--primary">
-                <i class="fa-solid fa-book-open" aria-hidden="true"></i>
-                <span id="cd-analyze-label">Analisar e recomendar</span>
-            </button>
-        </div>
-    </form>
-    </section>
-
-    </div><!-- /view analisar -->
-
-    <!-- ===== VIEW: RECOMENDAÇÕES ===== -->
-    <div id="cd-view-resultados" class="cd-view-section" hidden>
-
-    <!-- RESULTADOS / ESTADOS -->
-    <section class="cd-results" aria-labelledby="cd-results-title" aria-live="polite">
-      <div class="cd-results__head">
-        <div>
-          <span class="cd-kicker">Pré-visualização</span>
-          <h2 class="cd-results__title" id="cd-results-title">Referências de autoras recomendadas</h2>
-        </div>
-        <div class="cd-results__sort" id="cd-sort-wrap" hidden>
-          <label class="cd-label" for="cd-sort">Ordenar</label>
-          <select id="cd-sort" class="cd-select cd-select--sm" onchange="CitaDelasRecommend.render()">
-            <option value="relevance">Maior aderência</option>
-            <option value="recent">Mais recentes</option>
-            <option value="citations">Mais citados</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Estado: carregando (skeleton + spinner) -->
-      <div id="cd-loading" class="cd-loading" hidden>
-        <div class="cd-loading__head">
-          <span class="cd-spinner" aria-hidden="true"></span>
-          <div>
-            <p class="cd-loading__title">Cruzando dados da sua pesquisa…</p>
-            <p class="cd-loading__step" id="cd-loading-step">Analisando o contexto com o Gemini</p>
-          </div>
-        </div>
-        <div class="cd-skel-list" aria-hidden="true">
-          <div class="cd-skel-card">
-            <div class="cd-skeleton" style="height:16px;width:38%"></div>
-            <div class="cd-skeleton" style="height:22px;width:72%"></div>
-            <div class="cd-skeleton" style="height:12px;width:90%"></div>
-            <div class="cd-skeleton" style="height:12px;width:60%"></div>
-          </div>
-          <div class="cd-skel-card">
-            <div class="cd-skeleton" style="height:16px;width:30%"></div>
-            <div class="cd-skeleton" style="height:22px;width:80%"></div>
-            <div class="cd-skeleton" style="height:12px;width:85%"></div>
-            <div class="cd-skeleton" style="height:12px;width:50%"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Estado: erro -->
-      <div id="cd-error" class="cd-state" hidden>
-        <span class="cd-state__icon cd-state__icon--error"><i class="fa-solid fa-triangle-exclamation"></i></span>
-        <p class="cd-state__title" id="cd-error-title">Não foi possível concluir a análise</p>
-        <p class="cd-state__desc" id="cd-error-desc">Verifique o arquivo ou os dados informados e tente novamente.</p>
-        <button type="button" class="cd-btn cd-btn--soft cd-btn--sm" onclick="CitaDelasRecommend.retry()">
-          <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Tentar de novo
+        <button type="button" id="cd-dropzone" class="cd-dropzone">
+          <input type="file" id="cd-file-input" name="pdf_file"
+                 accept=".pdf,.txt" class="cd-sr-only" required />
+          <span class="cd-dropzone__icon" aria-hidden="true">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+          </span>
+          <span class="cd-dropzone__text">
+            <strong>Clique para selecionar</strong> ou arraste o arquivo aqui
+          </span>
+          <span class="cd-dropzone__hint">Formatos aceitos: PDF ou TXT</span>
         </button>
-      </div>
 
-      <!-- Estado: vazio (inicial) -->
-      <div id="cd-empty" class="cd-state">
-        <span class="cd-state__icon cd-state__icon--empty"><i class="fa-solid fa-magnifying-glass"></i></span>
-        <p class="cd-state__title">Ainda sem recomendações</p>
-        <p class="cd-state__desc">Envie um artigo ou descreva sua pesquisa acima. As autoras sugeridas aparecem aqui, prontas para citar.</p>
-      </div>
+        <div id="cd-file-info" class="cd-fileinfo" hidden>
+          <span class="cd-fileinfo__icon" aria-hidden="true"><i class="fa-solid fa-file-lines"></i></span>
+          <span id="cd-file-name" class="cd-fileinfo__name cd-truncate">arquivo.pdf</span>
+          <button type="button" class="cd-fileinfo__clear" onclick="CitaDelasRecommend.clearFile()" aria-label="Remover arquivo">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
 
-      <!-- Lista -->
-      <div id="cd-papers" class="cd-paper-list" hidden></div>
-
-      <div class="cd-results__more" id="cd-more-wrap" hidden>
-        <a href="{{ url_for('citaDelasResultPage.CitaDelasResultPage') }}" class="cd-btn cd-btn--gold">
-          Ver painel completo das recomendações <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i>
-        </a>
-      </div>
+        <div class="cd-upload__foot">
+          <p class="cd-upload__note">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            A estimativa de gênero é probabilística e não confirma a identidade das autoras.
+          </p>
+          <button id="cd-analyze" type="submit" class="cd-btn cd-btn--primary">
+            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+            <span id="cd-analyze-label">Analisar e recomendar</span>
+          </button>
+        </div>
+      </form>
     </section>
 
-    </div><!-- /view resultados -->
+    <!-- OVERLAY DE PROCESSAMENTO -->
+    <div id="cd-overlay" class="cd-overlay" hidden>
+      <div class="cd-overlay__card">
+        <span class="cd-spinner" aria-hidden="true"></span>
+        <p class="cd-overlay__title">Cruzando os dados da sua pesquisa…</p>
+        <p class="cd-overlay__step" id="cd-overlay-step">Analisando o contexto do artigo</p>
+      </div>
+    </div>
+
   </main>
 
   {% include 'components/citadelas/SavedDrawer.html' %}
   {% include 'components/citadelas/Toast.html' %}
 
-  <script src="{{ url_for('static', filename='js/components/CitaDelasShared.js') }}?v=20261021003228"></script>
-  <script src="{{ url_for('static', filename='js/mains/CitaDelasRecommend.js') }}?v=20261021003228"></script>
+  <script src="{{ url_for('static', filename='js/components/CitaDelasShared.js') }}?v=20261022"></script>
+  <script src="{{ url_for('static', filename='js/mains/CitaDelasRecommend.js') }}?v=20261022"></script>
 </body>
 </html>

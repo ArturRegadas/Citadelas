@@ -1,52 +1,57 @@
 /* ============================================================
-   CitaDelas — Sistema de Design (identidade própria)
-   Paleta: tinta quente (marrom-café) + terracota, ocre e
-   verde-azulado. Cores chapadas: sem gradientes, sem brilho
-   colorido. Evita Zinc/Slate e o excesso de cantos
-   arredondados e sombras genéricas.
+   CitaDelas — Sistema de Design
+   Identidade baseada na marca: fundo escuro (índigo/violeta
+   profundo), acentos LILÁS e VERDE-MENTA, texto claro.
+   Regras do projeto:
+     · cores CHAPADAS — sem gradientes de cor;
+     · sem barras laterais coloridas nos cards;
+     · margens generosas, respiro entre blocos;
+     · nada de empilhamento excessivo.
    ============================================================ */
 
 :root {
-  /* Fundos (tinta quente, não slate) */
-  --cd-ink-900: #15120e;
-  --cd-ink-850: #1b1712;
-  --cd-ink-800: #231e17;
-  --cd-ink-750: #2c261d;
-  --cd-surface: #201b15;
-  --cd-surface-raised: #2a241b;
-  --cd-line: #3d3427;
-  --cd-line-soft: #2f291f;
+  /* Fundos (violeta/índigo profundo, chapado) */
+  --cd-bg: #15121f;
+  --cd-bg-soft: #1b1726;
+  --cd-surface: #201b2e;
+  --cd-surface-2: #272035;
+  --cd-surface-3: #2f2740;
+  --cd-line: #362e49;
+  --cd-line-soft: #2b2539;
 
   /* Texto */
-  --cd-text: #f3ecde;
-  --cd-text-muted: #cfc4ae;
-  --cd-text-dim: #968a75;
+  --cd-text: #f3f0fb;
+  --cd-text-muted: #c6bedd;
+  --cd-text-dim: #8f87a8;
 
-  /* Acentos da marca (cores chapadas) */
-  --cd-accent: #e0653a; /* terracota: destaques, bordas, foco */
-  --cd-accent-strong: #bf4a22; /* terracota escuro: fundo de botões (contraste com texto branco) */
-  --cd-gold: #d9a52b; /* ocre */
-  --cd-teal: #3a9a8c; /* verde-azulado */
-  --cd-rose: #d94a5a; /* tijolo: erro / contraponto */
-  --cd-green: #7cc47f;
+  /* Acentos da marca (chapados) */
+  --cd-green: #7fe3a3; /* verde-menta: destaque principal */
+  --cd-green-ink: #0f2a1b; /* texto sobre verde */
+  --cd-purple: #b79cf0; /* lilás: símbolo feminino / destaque 2 */
+  --cd-purple-ink: #1b1030; /* texto sobre lilás */
 
-  /* Semânticos */
-  --cd-ok: #7cc47f;
-  --cd-warn: #d9a52b;
-  --cd-err: #d94a5a;
-  --cd-info: #6fa8d6;
+  /* Semânticos (chapados) */
+  --cd-ok: #7fe3a3;
+  --cd-warn: #f0c56b;
+  --cd-err: #f08a9b;
+  --cd-info: #8fb9f0;
 
-  /* Raios variados: nada de rounded-3xl em tudo */
-  --cd-r-xs: 3px;
-  --cd-r-sm: 6px;
-  --cd-r-md: 10px;
-  --cd-r-lg: 16px;
+  /* Raios */
+  --cd-r-xs: 6px;
+  --cd-r-sm: 10px;
+  --cd-r-md: 14px;
+  --cd-r-lg: 20px;
 
-  /* Sombra neutra e curta, sem brilho colorido */
-  --cd-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
-  --cd-shadow-soft: 0 1px 0 rgba(0, 0, 0, 0.35);
+  /* Sombras neutras, curtas, sem brilho colorido */
+  --cd-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --cd-shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.28);
+
   --cd-font: "Sora", "Inter", system-ui, sans-serif;
   --cd-serif: "Fraunces", "Merriweather", Georgia, serif;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 /* ---------- Base ---------- */
@@ -57,8 +62,9 @@
   flex-direction: column;
   font-family: var(--cd-font);
   color: var(--cd-text);
-  background-color: var(--cd-ink-900);
+  background-color: var(--cd-bg);
   -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
 }
 
 .cd-serif {
@@ -67,34 +73,31 @@
 
 .cd-shell {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 28px;
 }
 
-/* Texto dinâmico seguro no "caminho triste" */
-.cd-clamp-1 {
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.cd-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+/* ---------- Texto dinâmico seguro ---------- */
+.cd-clamp-1,
+.cd-clamp-2,
 .cd-clamp-3 {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+.cd-clamp-1 {
+  -webkit-line-clamp: 1;
+}
+.cd-clamp-2 {
+  -webkit-line-clamp: 2;
+}
+.cd-clamp-3 {
+  -webkit-line-clamp: 3;
 }
 .cd-break {
   overflow-wrap: anywhere;
   word-break: break-word;
-  hyphens: auto;
 }
 .cd-truncate {
   max-width: 100%;
@@ -103,9 +106,9 @@
   text-overflow: ellipsis;
 }
 
-/* ---------- Acessibilidade / foco de teclado ---------- */
+/* ---------- Acessibilidade ---------- */
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid var(--cd-gold);
+  outline: 2px solid var(--cd-green);
   outline-offset: 2px;
   border-radius: var(--cd-r-xs);
 }
@@ -123,69 +126,67 @@
 
 /* ---------- Scrollbar ---------- */
 .cd-body ::-webkit-scrollbar {
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
 }
 .cd-body ::-webkit-scrollbar-track {
-  background: var(--cd-ink-850);
+  background: var(--cd-bg-soft);
 }
 .cd-body ::-webkit-scrollbar-thumb {
   background: var(--cd-line);
-  border-radius: 2px;
+  border-radius: 999px;
 }
 .cd-body ::-webkit-scrollbar-thumb:hover {
-  background: var(--cd-accent);
+  background: var(--cd-purple);
 }
 
 /* ============================================================
-   COMPONENTES REUTILIZÁVEIS (evita duplicar classes utilitárias)
+   BOTÕES
    ============================================================ */
-
-/* ---------- Botões ---------- */
 .cd-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 9px;
   font-family: var(--cd-font);
   font-weight: 600;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   line-height: 1;
-  padding: 11px 18px;
+  padding: 12px 20px;
   border: 1px solid transparent;
-  border-radius: var(--cd-r-sm);
+  border-radius: 999px;
   cursor: pointer;
   transition:
     transform 0.12s ease,
-    filter 0.15s ease,
-    background 0.15s ease,
-    border-color 0.15s ease;
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease;
   text-decoration: none;
   white-space: nowrap;
 }
 .cd-btn:active {
-  transform: translateY(1px) scale(0.99);
+  transform: translateY(1px);
 }
 .cd-btn[disabled],
 .cd-btn.is-loading {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
 .cd-btn--primary {
-  background: var(--cd-accent-strong);
-  color: #fff;
-  box-shadow: var(--cd-shadow);
+  background: var(--cd-green);
+  color: var(--cd-green-ink);
 }
 .cd-btn--primary:hover {
-  filter: brightness(1.08);
+  background: #93ecb3;
 }
 
-.cd-btn--gold {
-  background: var(--cd-gold);
-  color: #2a1206;
+.cd-btn--purple {
+  background: var(--cd-purple);
+  color: var(--cd-purple-ink);
 }
-.cd-btn--gold:hover {
-  filter: brightness(1.05);
+.cd-btn--purple:hover {
+  background: #c7b1f5;
 }
 
 .cd-btn--ghost {
@@ -195,97 +196,87 @@
 }
 .cd-btn--ghost:hover {
   color: var(--cd-text);
-  border-color: var(--cd-accent);
-  background: rgba(224, 101, 58, 0.08);
+  border-color: var(--cd-purple);
 }
 
 .cd-btn--soft {
-  background: var(--cd-surface-raised);
+  background: var(--cd-surface-2);
   color: var(--cd-text);
   border-color: var(--cd-line);
 }
 .cd-btn--soft:hover {
-  border-color: var(--cd-teal);
+  border-color: var(--cd-green);
 }
 
 .cd-btn--icon {
-  padding: 9px;
-  width: 38px;
-  height: 38px;
-  justify-content: center;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
 }
 .cd-btn--sm {
-  padding: 7px 12px;
-  font-size: 0.74rem;
+  padding: 8px 14px;
+  font-size: 0.76rem;
 }
 .cd-btn--block {
   width: 100%;
-  justify-content: center;
 }
 
-/* ---------- Badges ---------- */
+/* ============================================================
+   BADGES
+   ============================================================ */
 .cd-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 999px;
   border: 1px solid var(--cd-line);
-  background: var(--cd-surface-raised);
+  background: var(--cd-surface-2);
   color: var(--cd-text-muted);
   max-width: 100%;
 }
 .cd-badge i {
-  font-size: 0.72em;
+  font-size: 0.78em;
 }
-.cd-badge--brand {
-  background: rgba(224, 101, 58, 0.14);
-  border-color: rgba(224, 101, 58, 0.45);
-  color: #ffb596;
-}
-.cd-badge--gold {
-  background: rgba(217, 165, 43, 0.14);
-  border-color: rgba(217, 165, 43, 0.45);
-  color: var(--cd-gold);
-}
-.cd-badge--ok {
-  background: rgba(124, 196, 127, 0.12);
-  border-color: rgba(124, 196, 127, 0.4);
+.cd-badge--green {
+  background: rgba(127, 227, 163, 0.12);
+  border-color: rgba(127, 227, 163, 0.4);
   color: var(--cd-green);
 }
-.cd-badge--teal {
-  background: rgba(58, 154, 140, 0.16);
-  border-color: rgba(58, 154, 140, 0.45);
-  color: #8fd0c4;
+.cd-badge--purple {
+  background: rgba(183, 156, 240, 0.14);
+  border-color: rgba(183, 156, 240, 0.4);
+  color: var(--cd-purple);
+}
+.cd-badge--muted {
+  color: var(--cd-text-dim);
 }
 
-/* Selo quadrado com índice/relevância — formato editorial, não pílula */
+/* Selo de pontuação */
 .cd-stamp {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-weight: 700;
-  font-size: 0.72rem;
-  padding: 6px 11px;
-  border-radius: var(--cd-r-xs);
-  background: var(--cd-accent-strong);
-  color: #fff;
+  font-size: 0.78rem;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: var(--cd-green);
+  color: var(--cd-green-ink);
 }
 
-/* ---------- Cartões (acento lateral, não cantos iguais) ---------- */
+/* ============================================================
+   CARTÕES — bordas neutras, sem acento lateral colorido
+   ============================================================ */
 .cd-card {
   position: relative;
   background: var(--cd-surface);
   border: 1px solid var(--cd-line-soft);
   border-radius: var(--cd-r-md);
-  box-shadow: var(--cd-shadow-soft);
-}
-.cd-card--accent {
-  /* acento sutil no topo, sem barra lateral chamativa */
-  border-top: 2px solid var(--cd-accent);
+  box-shadow: var(--cd-shadow-sm);
 }
 .cd-card--hover {
   transition:
@@ -293,35 +284,36 @@
     transform 0.18s ease;
 }
 .cd-card--hover:hover {
-  transform: translateY(-2px);
-  border-color: var(--cd-accent);
+  transform: translateY(-3px);
+  border-color: var(--cd-purple);
 }
 
-/* ---------- Inputs ---------- */
+/* ============================================================
+   INPUTS
+   ============================================================ */
 .cd-field {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 .cd-label {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--cd-text-muted);
 }
 .cd-label .cd-req {
-  color: var(--cd-rose);
+  color: var(--cd-purple);
 }
 .cd-input,
 .cd-select,
 .cd-textarea {
   width: 100%;
-  box-sizing: border-box;
   font-family: var(--cd-font);
-  font-size: 0.86rem;
+  font-size: 0.9rem;
   color: var(--cd-text);
-  background: var(--cd-ink-850);
+  background: var(--cd-bg-soft);
   border: 1px solid var(--cd-line);
   border-radius: var(--cd-r-sm);
   padding: 12px 14px;
@@ -342,49 +334,38 @@
 .cd-select:focus,
 .cd-textarea:focus {
   outline: none;
-  border-color: var(--cd-accent);
-  box-shadow: 0 0 0 3px rgba(224, 101, 58, 0.18);
+  border-color: var(--cd-green);
+  box-shadow: 0 0 0 3px rgba(127, 227, 163, 0.16);
+}
+.cd-select--sm {
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  width: auto;
 }
 
-/* ---------- Tags (chips de palavra-chave) ---------- */
+/* ---------- Chips de palavra-chave ---------- */
 .cd-chip {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  max-width: 220px;
+  gap: 6px;
+  max-width: 240px;
   font-size: 0.74rem;
   font-weight: 500;
-  padding: 5px 10px;
-  border-radius: var(--cd-r-xs);
-  background: rgba(58, 154, 140, 0.18);
-  border: 1px solid rgba(58, 154, 140, 0.4);
-  color: #8fd0c4;
-}
-.cd-chip button {
-  background: none;
-  border: none;
-  color: inherit;
-  cursor: pointer;
-  font-size: 1rem;
-  line-height: 1;
-  padding: 0;
-}
-.cd-chip button:hover {
-  color: var(--cd-gold);
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(183, 156, 240, 0.12);
+  border: 1px solid rgba(183, 156, 240, 0.32);
+  color: var(--cd-purple);
 }
 
-/* ---------- Divisores e títulos de seção ---------- */
-.cd-section-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+/* ---------- Kicker / títulos de seção ---------- */
 .cd-kicker {
-  font-size: 0.68rem;
+  display: inline-block;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--cd-accent);
+  color: var(--cd-green);
 }
 .cd-rule {
   border: 0;
@@ -392,10 +373,10 @@
   margin: 0;
 }
 
-/* ---------- Barra de progresso ---------- */
+/* ---------- Medidor (barra de progresso) ---------- */
 .cd-meter {
   height: 8px;
-  background: var(--cd-ink-850);
+  background: var(--cd-bg-soft);
   border-radius: 999px;
   overflow: hidden;
   display: flex;
@@ -404,50 +385,33 @@
   display: block;
   height: 100%;
 }
-.cd-meter--brand > span:first-child {
-  background: var(--cd-accent-strong);
-}
 
 /* ============================================================
    ESTADOS: skeleton, spinner, vazio, erro
+   (skeleton sem gradiente colorido — pulso de opacidade)
    ============================================================ */
 .cd-skeleton {
-  position: relative;
-  overflow: hidden;
-  background: var(--cd-surface-raised);
+  background: var(--cd-surface-2);
   border-radius: var(--cd-r-sm);
+  animation: cd-pulse 1.3s ease-in-out infinite;
 }
-.cd-skeleton::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  transform: translateX(-100%);
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(217, 165, 43, 0.12),
-    transparent
-  );
-  animation: cd-shimmer 1.4s infinite;
-}
-@keyframes cd-shimmer {
+@keyframes cd-pulse {
+  0%,
   100% {
-    transform: translateX(100%);
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
   }
 }
 
 .cd-spinner {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  border: 3px solid rgba(224, 101, 58, 0.2);
-  border-top-color: var(--cd-accent);
+  border: 3px solid var(--cd-line);
+  border-top-color: var(--cd-green);
   animation: cd-spin 0.8s linear infinite;
-}
-.cd-spinner--sm {
-  width: 18px;
-  height: 18px;
-  border-width: 2px;
 }
 @keyframes cd-spin {
   to {
@@ -461,106 +425,81 @@
   align-items: center;
   text-align: center;
   gap: 12px;
-  padding: 46px 24px;
+  padding: 54px 28px;
   border: 1px dashed var(--cd-line);
   border-radius: var(--cd-r-md);
-  background: rgba(32, 27, 21, 0.4);
+  background: var(--cd-bg-soft);
 }
 .cd-state__icon {
-  width: 58px;
-  height: 58px;
+  width: 60px;
+  height: 60px;
   display: grid;
   place-items: center;
-  border-radius: var(--cd-r-md);
+  border-radius: 50%;
   font-size: 1.5rem;
 }
 .cd-state__icon--empty {
-  background: rgba(58, 154, 140, 0.14);
-  color: #8fd0c4;
+  background: rgba(183, 156, 240, 0.14);
+  color: var(--cd-purple);
 }
 .cd-state__icon--error {
-  background: rgba(217, 74, 90, 0.14);
-  color: var(--cd-rose);
+  background: rgba(240, 138, 155, 0.14);
+  color: var(--cd-err);
 }
 .cd-state__title {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--cd-text);
+  margin: 0;
 }
 .cd-state__desc {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--cd-text-dim);
-  max-width: 380px;
+  max-width: 420px;
+  margin: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .cd-spinner,
-  .cd-skeleton::after {
+  .cd-skeleton {
     animation: none;
   }
 }
 
-/* ---------- Abas de navegação de seções (sub-barra) ---------- */
-.cd-subnav {
-  position: sticky;
-  top: 72px;
-  z-index: 40;
-  background: rgba(27, 23, 18, 0.92);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--cd-line-soft);
-}
-.cd-subnav__inner { padding-top: 10px; padding-bottom: 10px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.cd-viewtabs {
-  display: inline-flex;
-  gap: 4px;
-  padding: 5px;
-  background: var(--cd-ink-850);
-  border: 1px solid var(--cd-line-soft);
-  border-radius: var(--cd-r-md);
-  flex-wrap: wrap;
-}
-.cd-viewtabs__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--cd-font);
-  font-size: 0.77rem;
-  font-weight: 600;
-  padding: 8px 15px;
-  border: none;
-  background: none;
-  color: var(--cd-text-dim);
-  border-radius: var(--cd-r-sm);
-  cursor: pointer;
-  transition: color 0.15s, background 0.15s;
-}
-.cd-viewtabs__btn:hover { color: var(--cd-text); }
-.cd-viewtabs__btn.is-active { background: var(--cd-accent-strong); color: #fff; }
-/* ---------- Entrada suave de views/seções ---------- */
+/* ---------- Entrada suave ---------- */
 @keyframes cd-fade-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-.cd-view-section,
-.cd-view {
-  animation: cd-fade-in 0.28s ease both;
+.cd-fade {
+  animation: cd-fade-in 0.3s ease both;
 }
 @media (prefers-reduced-motion: reduce) {
-  .cd-view-section, .cd-view { animation: none; }
+  .cd-fade {
+    animation: none;
+  }
 }
-/* ---------- Toast ---------- */
+
+/* ============================================================
+   TOAST — sem barra lateral colorida
+   ============================================================ */
 .cd-toast {
   position: fixed;
-  bottom: 22px;
-  right: 22px;
+  bottom: 24px;
+  right: 24px;
   z-index: 60;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 13px 18px;
-  background: var(--cd-ink-800);
+  padding: 14px 18px;
+  background: var(--cd-surface-2);
   border: 1px solid var(--cd-line);
-  border-left: 3px solid var(--cd-accent);
   border-radius: var(--cd-r-sm);
   box-shadow: var(--cd-shadow);
   transform: translateY(24px);
@@ -576,20 +515,44 @@
   opacity: 1;
 }
 .cd-toast__icon {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
-  border-radius: var(--cd-r-xs);
-  background: rgba(124, 196, 127, 0.16);
+  border-radius: 50%;
+  background: rgba(127, 227, 163, 0.16);
   color: var(--cd-green);
   flex-shrink: 0;
 }
 .cd-toast.is-error .cd-toast__icon {
-  background: rgba(217, 74, 90, 0.16);
-  color: var(--cd-rose);
+  background: rgba(240, 138, 155, 0.16);
+  color: var(--cd-err);
 }
 .cd-toast__msg {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 500;
+}
+
+/* ============================================================
+   LOGO DA MARCA (aspas verdes + símbolo feminino lilás)
+   ============================================================ */
+.cd-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.cd-logo__mark {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+}
+.cd-logo__word {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--cd-text);
+  line-height: 1;
+}
+.cd-logo__word em {
+  font-style: normal;
+  color: var(--cd-green);
 }
