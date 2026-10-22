@@ -17,11 +17,11 @@ WEIGHTS = {
 }
 
 GERAL_WEIGHTS = {
-    "similarity": 0.00,
-    "importance": 0.00,
-    "relevance": 0.00,
-    "present": 0.00,
-    "genre_compose": 0.00
+    "similarity": 0.40,
+    "importance": 0.25,
+    "relevance": 0.15,
+    "present": 0.10,
+    "genre_compose": 0.10
 }
 
 # Weight of each comparison method.
@@ -218,7 +218,7 @@ def calculate_article_present(article_b, h:int):
 
 # base = med de citações da area do artigo
 def calculate_article_relevance(article_b, base=5):
-    citations = article_b["cited_by_count"] ## ATENTION
+    citations = article_b.get("cited_by_count") or 0  ## ATENTION
 
     if base <= 0:
         return 100
@@ -234,7 +234,10 @@ def calculate_article_relevance(article_b, base=5):
 def calculate_article_present(article_b, h: int =10):
     current_year = datetime.date.today().year
 
-    publication_year = article_b["year"]
+    publication_year = article_b.get("year")
+    if not publication_year:
+        return 0.0
+
     age = max(0, current_year - publication_year)
 
     score = 100 * (2 ** (-age / h))
@@ -246,18 +249,29 @@ def calculate_article_present(article_b, h: int =10):
 
 # % de mulheres entre os autores do artigo
 def calculate_article_genre_compose(article_b):
-    return article_b.get("genero", {}).get("female_percentage", 0)
+    return (article_b.get("genero") or {}).get("female_percentage", 0) or 0
 
 
 def calculate_score(article_a_text, article_a_data, article_b) -> Dict[str, Any]:
     similarity_result = calculate_article_similarity(
         article_a_data, article_b
     )
+    # calculate_article_similarity devolve {"similarity", "field_scores"};
+    # para o score geral usamos o valor escalar.
+    if isinstance(similarity_result, dict):
+        similarity_value = similarity_result.get("similarity", 0)
+    else:
+        similarity_value = similarity_result
+
     importance_result_data = calculate_article_importance(
         article_a_text, article_b
     )
+    # article_importance devolve um modelo Pydantic; serializa para dict.
+    from pydantic import BaseModel
+    if isinstance(importance_result_data, BaseModel):
+        importance_result_data = importance_result_data.model_dump(mode="json")
 
-    importance_result = importance_result_data.get("importance_value", 0)
+    importance_result = importance_result_data.get("importance_score", 0)
 
     present_result = calculate_article_present(
         article_b, h=5
@@ -270,13 +284,13 @@ def calculate_score(article_a_text, article_a_data, article_b) -> Dict[str, Any]
     )
 
     return {
-        "similarity": similarity_result,
+        "similarity": similarity_value,
         "importance": importance_result,
         "present": present_result,
         "relevance": relevance_result,
         "genre_compose": genre_compose_result,
         "total":
-            similarity_result*GERAL_WEIGHTS["similarity"] +
+            similarity_value*GERAL_WEIGHTS["similarity"] +
             importance_result*GERAL_WEIGHTS["importance"] +
             present_result*GERAL_WEIGHTS["present"] +
             relevance_result*GERAL_WEIGHTS["relevance"] +
@@ -285,18 +299,16 @@ def calculate_score(article_a_text, article_a_data, article_b) -> Dict[str, Any]
     }
 
 
-## articlea[all_context, article_analysis]
+## articlea[all_content, article_analysis]
 def calculate_articles_scores(article_a, limit = 5, offset = 0):
-    results = []
-
     article_a_text = article_a.get("all_content", "")
     article_a_data = article_a.get("article_analysis", {})
 
-    articles = alexService.filtrar_autoria_feminina(
-        resultado = alexService.buscar(entrada = article_a_data, estimar_genero=True),
+    articles = alexService.buscar_artigos_para_comparacao(
+        entrada=article_a_data,
         limite_percentual=25,
         country_id="BR",
-        fallback_qtd=5
+        fallback_qtd=5,
     )
 
     ans = []
@@ -318,9 +330,8 @@ def calculate_articles_scores(article_a, limit = 5, offset = 0):
             }
         })
         cnt += 1
-        
 
-    return results
+    return ans
     """
     [
         "article":{
