@@ -18,10 +18,10 @@ WEIGHTS = {
 
 GERAL_WEIGHTS = {
     "similarity": 0.40,
-    "importance": 0.25,
-    "relevance": 0.15,
-    "present": 0.10,
-    "genre_compose": 0.10
+    "importance": 0.55,
+    "relevance": 0.25,
+    "present": 0.05,
+    "genre_compose": 0.05
 }
 
 # Weight of each comparison method.
@@ -263,15 +263,19 @@ def calculate_score(article_a_text, article_a_data, article_b) -> Dict[str, Any]
     else:
         similarity_value = similarity_result
 
-    importance_result_data = calculate_article_importance(
-        article_a_text, article_b
-    )
-    # article_importance devolve um modelo Pydantic; serializa para dict.
+    # Importância via Gemini é opcional (peso 0 no total). Se falhar
+    # (503, JSON inválido, cota), não derruba o candidato: usa 0.
     from pydantic import BaseModel
-    if isinstance(importance_result_data, BaseModel):
-        importance_result_data = importance_result_data.model_dump(mode="json")
+    try:
+        importance_result_data = calculate_article_importance(
+            article_a_text, article_b
+        )
+        if isinstance(importance_result_data, BaseModel):
+            importance_result_data = importance_result_data.model_dump(mode="json")
+    except Exception as erro:
+        importance_result_data = {"erro": str(erro)[:200]}
 
-    importance_result = importance_result_data.get("importance_score", 0)
+    importance_result = (importance_result_data or {}).get("importance_score", 0) or 0
 
     present_result = calculate_article_present(
         article_b, h=5
