@@ -417,7 +417,7 @@ A função retorna a pontuação geral e as pontuações por campo.
 
 #### `calculate_article_importance(...)`
 
-Converte os dados do artigo candidato em texto e encaminha a comparação para o Gemini.
+Converte os dados do artigo candidato em texto e encaminha a comparação para o Gemini, chamando o serviço `article_importance` do `GeminiService.py`
 
 #### `calculate_article_present(...)`
 
@@ -458,7 +458,7 @@ Responsável por estimar informações de gênero associadas aos nomes dos autor
 #### Funções principais
 
 - `genderize_name`: consulta individual de um nome.
-- `genderize_names`: consulta em lote.
+- `genderize_names`: consulta de nomes em lote.
 - `female_authorship_share`: calcula a proporção de autores classificados como femininos.
 - `analyze_authors`: consolida contagens, percentuais e previsões individuais.
 
@@ -474,7 +474,7 @@ A integração depende de `Config.DEMOGRAFIX_API_KEY`.
 |---|---|
 | Python | Linguagem principal do backend. |
 | Flask | Framework web e implementação do endpoint. |
-| Pydantic | Validação dos dados estruturados. |
+| Pydantic | Validação dos dados estruturados. Montagem dos Schemas de resposta estruturada |
 | Google Gemini | Análise contextual e avaliação de importância. |
 | OpenAlex | Busca bibliográfica e metadados acadêmicos. |
 | Demografix | Estimativa de gênero associada aos nomes dos autores. |
