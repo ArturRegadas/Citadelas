@@ -1,0 +1,71 @@
+# ============================================================
+# Docker Compose - DEPLOY / PRODUÇÃO
+# Uso:  docker compose -f docker-compose.prod.yml up -d --build
+# Diferenças do dev: usa gunicorn (CMD do Dockerfile), sem volume
+# de código, restart automático e porta presa ao localhost (atrás
+# do Nginx em flask-app.conf).
+# ============================================================
+
+services:
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - private_network
+
+  redis:
+    image: redis:7
+    container_name: redis_cache
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - private_network
+
+  web:
+    build: .
+    container_name: flask_app
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      SQLALCHEMY_DATABASE_URI: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      CACHE_TYPE: RedisCache
+      CACHE_REDIS_URL: redis://redis:6379/0
+    ports:
+      # Apenas no localhost: o Nginx (flask-app.conf) faz o proxy público.
+      - "127.0.0.1:5000:5000"
+    # Sem "command": usa o CMD do Dockerfile (gunicorn + eventlet).
+    networks:
+      - public_network
+      - private_network
+
+volumes:
+  pgdata:
+  redis_data:
+
+networks:
+  private_network:
+    driver: bridge
+  public_network:
+    driver: bridge

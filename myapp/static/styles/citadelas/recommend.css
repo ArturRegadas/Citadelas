@@ -1,0 +1,244 @@
+/* ============================================================
+   CitaDelas — Página de envio (landing + upload)
+   ============================================================ */
+.cd-landing {
+  flex: 1;
+  padding-top: 56px;
+  padding-bottom: 72px;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 56px;
+  align-items: start;
+}
+
+/* ---------- HERO ---------- */
+.cd-hero {
+  padding-top: 8px;
+}
+.cd-hero__brand .cd-logo__mark {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 22px;
+}
+.cd-hero__title {
+  font-size: clamp(2rem, 4vw, 2.9rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  margin: 18px 0 20px;
+}
+.cd-hero__accent {
+  color: var(--cd-green);
+  font-weight: 600;
+}
+.cd-hero__lead {
+  font-size: 1.02rem;
+  color: var(--cd-text-muted);
+  max-width: 48ch;
+  margin: 0 0 32px;
+}
+.cd-hero__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.cd-hero__steps li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.92rem;
+  color: var(--cd-text);
+}
+.cd-hero__num {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: rgba(183, 156, 240, 0.14);
+  border: 1px solid rgba(183, 156, 240, 0.34);
+  color: var(--cd-purple);
+}
+
+/* ---------- UPLOAD ---------- */
+.cd-upload {
+  padding: 32px;
+  position: sticky;
+  top: 100px;
+}
+.cd-upload__head {
+  margin-bottom: 22px;
+}
+.cd-upload__title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+.cd-upload__sub {
+  font-size: 0.88rem;
+  color: var(--cd-text-dim);
+  margin: 0;
+}
+
+/* Dropzone */
+.cd-dropzone {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  padding: 44px 24px;
+  border: 1.5px dashed var(--cd-line);
+  border-radius: var(--cd-r-md);
+  background: var(--cd-bg-soft);
+  color: var(--cd-text-muted);
+  cursor: pointer;
+  font-family: var(--cd-font);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+.cd-dropzone:hover,
+.cd-dropzone.is-drag {
+  border-color: var(--cd-green);
+  background: rgba(127, 227, 163, 0.06);
+}
+.cd-dropzone__icon {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--cd-surface-2);
+  color: var(--cd-green);
+  font-size: 1.5rem;
+}
+.cd-dropzone__text {
+  font-size: 0.92rem;
+}
+.cd-dropzone__text strong {
+  color: var(--cd-text);
+}
+.cd-dropzone__hint {
+  font-size: 0.76rem;
+  color: var(--cd-text-dim);
+}
+
+/* Info do arquivo anexado */
+.cd-fileinfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--cd-line);
+  border-radius: var(--cd-r-sm);
+  background: var(--cd-bg-soft);
+}
+.cd-fileinfo__icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--cd-r-xs);
+  background: rgba(183, 156, 240, 0.14);
+  color: var(--cd-purple);
+  flex-shrink: 0;
+}
+.cd-fileinfo__name {
+  flex: 1;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+.cd-fileinfo__clear {
+  background: none;
+  border: none;
+  color: var(--cd-text-dim);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px;
+}
+.cd-fileinfo__clear:hover {
+  color: var(--cd-err);
+}
+
+/* Rodapé do formulário */
+.cd-upload__foot {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.cd-upload__note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--cd-text-dim);
+  margin: 0;
+}
+.cd-upload__note i {
+  color: var(--cd-purple);
+  margin-top: 2px;
+}
+.cd-upload__foot .cd-btn {
+  align-self: stretch;
+}
+
+/* ---------- OVERLAY DE PROCESSAMENTO ---------- */
+.cd-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  background: rgba(16, 13, 24, 0.82);
+  backdrop-filter: blur(6px);
+}
+.cd-overlay[hidden] {
+  display: none;
+}
+.cd-overlay__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+  padding: 40px 44px;
+  background: var(--cd-surface);
+  border: 1px solid var(--cd-line);
+  border-radius: var(--cd-r-lg);
+  box-shadow: var(--cd-shadow);
+  max-width: 400px;
+}
+.cd-overlay__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+}
+.cd-overlay__step {
+  font-size: 0.85rem;
+  color: var(--cd-text-muted);
+  margin: 0;
+  min-height: 1.2em;
+}
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 920px) {
+  .cd-landing {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding-top: 40px;
+  }
+  .cd-upload {
+    position: static;
+  }
+}

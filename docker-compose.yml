@@ -1,4 +1,9 @@
-version: '3.9'
+# ============================================================
+# Docker Compose - AMBIENTE DE DESENVOLVIMENTO
+# Para rodar na sua máquina:  docker compose up --build
+# Sobe: Postgres + Redis + a app Flask (servidor de dev, hot-reload).
+# A app fica em http://localhost:5000
+# ============================================================
 
 services:
   db:
@@ -6,12 +11,16 @@ services:
     container_name: postgres_db
     env_file:
       - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hackathon}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hackathon}
+      POSTGRES_DB: ${POSTGRES_DB:-hackathon}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hackathon}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,13 +35,12 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis_data:/data
-    networks: 
+    networks:
       - private_network
 
   web:
     build: .
     container_name: flask_app
-    restart: always
     depends_on:
       db:
         condition: service_healthy
@@ -40,11 +48,17 @@ services:
         condition: service_started
     env_file:
       - .env
+    environment:
+      # Dentro da rede do compose, o banco é o host "db" (não localhost).
+      SQLALCHEMY_DATABASE_URI: postgresql+psycopg://${POSTGRES_USER:-hackathon}:${POSTGRES_PASSWORD:-hackathon}@db:5432/${POSTGRES_DB:-hackathon}
+      CACHE_TYPE: RedisCache
+      CACHE_REDIS_URL: redis://redis:6379/0
     ports:
-      - "127.0.0.1:5000:5000"
+      - "5000:5000"
     volumes:
+      # Monta o código para hot-reload em desenvolvimento.
       - ./:/app
-    command: flask run --host=0.0.0.0
+    command: flask run --host=0.0.0.0 --port=5000
     networks:
       - public_network
       - private_network

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CitaDelas — Recomendações</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/theme.css') }}?v=20261022d" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-topbar.css') }}?v=20261022d" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-drawer.css') }}?v=20261022d" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/result.css') }}?v=20261022d" />
+</head>
+<body class="cd-body">
+
+  {% with active='resultado' %}{% include 'components/citadelas/Topbar.html' %}{% endwith %}
+
+  <main class="cd-shell cd-result">
+
+    <!-- Contexto da pesquisa do usuário -->
+    <section id="cd-source" class="cd-source cd-card cd-fade" hidden aria-label="Resumo da análise">
+      <div class="cd-source__main">
+        <span class="cd-kicker">Seu manuscrito</span>
+        <h1 class="cd-source__title" id="cd-source-title">—</h1>
+        <p class="cd-source__summary cd-clamp-3 cd-break" id="cd-source-summary"></p>
+      </div>
+      <dl class="cd-source__meta">
+        <div><dt>Área</dt><dd id="cd-source-area">—</dd></div>
+        <div><dt>Recomendações</dt><dd id="cd-source-count">0</dd></div>
+      </dl>
+    </section>
+
+    <!-- Barra de controle -->
+    <section id="cd-controls" class="cd-controls cd-fade" hidden>
+      <div class="cd-controls__info">
+        <h2 class="cd-controls__title">Artigos de autoras recomendados</h2>
+        <p class="cd-controls__sub">Ordenados por aderência à sua pesquisa e provável autoria feminina.</p>
+      </div>
+      <div class="cd-controls__actions">
+        <label class="cd-check">
+          <input type="checkbox" id="cd-f-female" />
+          <span><i class="fa-solid fa-venus" style="color:var(--cd-purple)"></i> Só autoria 100% feminina</span>
+        </label>
+        <div class="cd-controls__sort">
+          <label class="cd-label" for="cd-sort">Ordenar</label>
+          <select id="cd-sort" class="cd-select cd-select--sm">
+            <option value="total">Pontuação final</option>
+            <option value="similarity">Similaridade</option>
+            <option value="female">Autoria feminina</option>
+            <option value="year">Mais recentes</option>
+            <option value="citations">Mais citados</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Abas: lista x comparativo -->
+    <nav id="cd-tabs" class="cd-tabs cd-fade" role="tablist" aria-label="Visualizações das recomendações" hidden>
+      <button type="button" id="cd-tab-list" class="cd-tabs__btn is-active" role="tab" aria-selected="true" data-cd-tab="list">
+        <i class="fa-solid fa-list" aria-hidden="true"></i> Recomendações
+      </button>
+      <button type="button" id="cd-tab-compare" class="cd-tabs__btn" role="tab" aria-selected="false" data-cd-tab="compare">
+        <i class="fa-solid fa-chart-column" aria-hidden="true"></i> Comparativo
+      </button>
+    </nav>
+
+    <!-- Estado: vazio (sem dados) -->
+    <div id="cd-empty" class="cd-state" hidden>
+      <span class="cd-state__icon cd-state__icon--empty"><i class="fa-solid fa-magnifying-glass"></i></span>
+      <p class="cd-state__title">Nenhuma recomendação para exibir</p>
+      <p class="cd-state__desc">Envie um artigo na página de análise para gerar recomendações de autoras.</p>
+      <a href="{{ url_for('citaDelasPage.CitaDelasPage') }}" class="cd-btn cd-btn--primary cd-btn--sm">
+        <i class="fa-solid fa-file-arrow-up"></i> Analisar um artigo
+      </a>
+    </div>
+
+    <!-- VIEW: lista de recomendações -->
+    <section id="cd-view-list" class="cd-view">
+      <div id="cd-grid" class="cd-grid" aria-live="polite"></div>
+    </section>
+
+    <!-- VIEW: comparativo (Chart.js) -->
+    <section id="cd-view-compare" class="cd-view" hidden>
+      <div class="cd-compare__head">
+        <div>
+          <h2 class="cd-controls__title">Comparativo entre recomendações</h2>
+          <p class="cd-controls__sub">Selecione até 5 artigos para confrontar pontuações, autoria e citações.</p>
+        </div>
+      </div>
+
+      <div id="cd-compare-pick" class="cd-compare__pick" aria-label="Selecionar artigos para comparar"></div>
+
+      <div id="cd-compare-empty" class="cd-state" hidden>
+        <span class="cd-state__icon cd-state__icon--empty"><i class="fa-solid fa-chart-pie"></i></span>
+        <p class="cd-state__title">Selecione ao menos um artigo</p>
+        <p class="cd-state__desc">Marque os artigos acima para gerar os gráficos comparativos.</p>
+      </div>
+
+      <div id="cd-compare-charts" class="cd-compare__charts">
+        <div class="cd-chart-card cd-card cd-chart-card--wide">
+          <h3 class="cd-chart-card__title"><i class="fa-solid fa-bullseye"></i> Perfil de pontuação</h3>
+          <div class="cd-chart-card__canvas"><canvas id="cd-chart-radar"></canvas></div>
+        </div>
+        <div class="cd-chart-card cd-card">
+          <h3 class="cd-chart-card__title"><i class="fa-solid fa-ranking-star"></i> Pontuação final</h3>
+          <div class="cd-chart-card__canvas"><canvas id="cd-chart-total"></canvas></div>
+        </div>
+        <div class="cd-chart-card cd-card">
+          <h3 class="cd-chart-card__title"><i class="fa-solid fa-venus-mars"></i> Composição de autoria</h3>
+          <div class="cd-chart-card__canvas"><canvas id="cd-chart-gender"></canvas></div>
+        </div>
+        <div class="cd-chart-card cd-card cd-chart-card--wide">
+          <h3 class="cd-chart-card__title"><i class="fa-solid fa-quote-right"></i> Citações recebidas</h3>
+          <div class="cd-chart-card__canvas"><canvas id="cd-chart-citations"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Painel de detalhe (análise completa) -->
+  <div id="cd-detail" class="cd-drawer cd-drawer--wide" hidden>
+    <div class="cd-drawer__backdrop" data-cd-detail-close tabindex="-1"></div>
+    <aside class="cd-drawer__panel" role="dialog" aria-modal="true" aria-labelledby="cd-detail-title">
+      <header class="cd-drawer__head">
+        <div style="min-width:0">
+          <span class="cd-badge cd-badge--green" id="cd-detail-score">—</span>
+          <h2 class="cd-drawer__title cd-break" id="cd-detail-title" style="margin-top:10px;font-size:1.1rem"></h2>
+        </div>
+        <button type="button" class="cd-btn cd-btn--icon cd-btn--ghost" data-cd-detail-close aria-label="Fechar">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </header>
+      <div class="cd-drawer__body" id="cd-detail-body"></div>
+    </aside>
+  </div>
+
+  {% include 'components/citadelas/SavedDrawer.html' %}
+  {% include 'components/citadelas/Toast.html' %}
+
+  <!-- Dados vindos do servidor (quando a página é renderizada via POST) -->
+  <script id="cd-server-data" type="application/json">
+    {% if recommendations is defined %}{{ {"source": source, "recommendations": recommendations} | tojson }}{% else %}null{% endif %}
+  </script>
+
+  <script src="{{ url_for('static', filename='js/components/CitaDelasShared.js') }}?v=20261022d"></script>
+  <script src="{{ url_for('static', filename='js/mains/CitaDelasResult.js') }}?v=20261022d"></script>
+</body>
+</html>

@@ -1,7 +1,5 @@
 from flask import Blueprint, request, Response, redirect, session, url_for
 from typing import Tuple
-from myapp.services.ChangeLPData import change_lp_data
-from myapp.services.ChangePPData import change_pp_data
 from myapp.utils.LinksUrl import CONFIG_PAGE
 from myapp.utils.Unmask import unmask
 from myapp.utils.Validations.validations import is_cpf, User_validation
@@ -14,10 +12,6 @@ import myapp.repositories.PhysicalPersonRepository as physical_person_repository
 def general_change_config(name, username, request):
     current_user = user_repository.get_by_id(session.get("user_id"))
 
-    if session["user_type"]=="physical_person":
-        change_pp_data(request, current_user)
-    elif session["user_type"] == "legal_person":
-       change_lp_data(request, current_user)
             
 
     cpf = request.form.get("cpf", None)

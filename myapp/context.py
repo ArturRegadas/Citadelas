@@ -1,6 +1,23 @@
 from flask import session, Flask, url_for
+from werkzeug.routing.exceptions import BuildError
 from typing import Dict, Optional, Any
 def init_context(app: Flask) -> None:
+
+    @app.context_processor
+    def inject_url_helpers() -> Dict[str, Any]:
+        def safe_url_for(endpoint: str, fallback: str = "/", **values) -> str:
+            """url_for que não quebra o template quando o endpoint não existe.
+
+            Útil em componentes legados (ex.: Header.html) incluídos por
+            páginas de erro: evita que um 404 vire 500 por BuildError.
+            """
+            try:
+                return url_for(endpoint, **values)
+            except BuildError:
+                return fallback
+
+        return dict(safe_url_for=safe_url_for)
+
     @app.context_processor
     def inject_user() -> Dict[str, Optional[Dict[str, Any]]]:
         search_links = []#_cached_search_links()

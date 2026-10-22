@@ -1,0 +1,32 @@
+{# ============================================================
+   Componente: Topbar da marca CitaDelas
+   Parâmetros (via Jinja `with`):
+     active   -> aba ativa ('recomendar' | 'resultado')
+     saved    -> total de citações salvas (opcional, default 0)
+   ============================================================ #}
+<header class="cd-topbar">
+  <div class="cd-shell cd-topbar__inner">
+    <a class="cd-topbar__brand" href="{{ url_for('citaDelasPage.CitaDelasPage') }}" aria-label="Ir para a página inicial do CitaDelas">
+      {% include 'components/citadelas/LogoMark.html' %}
+      <span class="cd-topbar__title">
+        <span class="cd-logo__word cd-topbar__name">CITA<em>delas</em></span>
+        <span class="cd-topbar__tag">Citações e Visibilidade Feminina</span>
+      </span>
+    </a>
+
+    <nav class="cd-topbar__nav" aria-label="Navegação principal">
+      <a href="{{ url_for('citaDelasPage.CitaDelasPage') }}"
+         class="cd-topbar__link {{ 'is-active' if active == 'recomendar' else '' }}"
+         {{ 'aria-current=page' if active == 'recomendar' else '' }}>
+        <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
+        <span>Analisar</span>
+      </a>
+    </nav>
+
+    <button type="button" class="cd-btn cd-btn--soft cd-topbar__saved" onclick="window.CitaDelasShared?.toggleSavedDrawer()">
+      <i class="fa-solid fa-bookmark" aria-hidden="true" style="color: var(--cd-purple);"></i>
+      <span class="cd-topbar__saved-text">Minhas citações</span>
+      <span class="cd-topbar__counter" id="cd-saved-counter" aria-live="polite">{{ saved | default(0) }}</span>
+    </button>
+  </div>
+</header>

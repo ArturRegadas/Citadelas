@@ -1,0 +1,117 @@
+/* ============================================================
+   Topbar CitaDelas
+   ============================================================ */
+.cd-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(21, 18, 31, 0.86);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--cd-line-soft);
+}
+.cd-topbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 74px;
+}
+
+/* Marca */
+.cd-topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  text-decoration: none;
+  min-width: 0;
+}
+.cd-topbar__brand .cd-logo__mark {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+.cd-topbar__brand:hover .cd-logo__mark {
+  transform: translateY(-2px);
+}
+.cd-topbar__title {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.cd-topbar__name {
+  font-size: 1.3rem;
+}
+.cd-topbar__tag {
+  font-size: 0.7rem;
+  color: var(--cd-text-dim);
+  font-weight: 500;
+  margin-top: 3px;
+}
+
+/* Navegação */
+.cd-topbar__nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  background: var(--cd-bg-soft);
+  border: 1px solid var(--cd-line-soft);
+  border-radius: 999px;
+}
+.cd-topbar__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: 999px;
+  color: var(--cd-text-dim);
+  text-decoration: none;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+.cd-topbar__link i {
+  font-size: 0.85em;
+}
+.cd-topbar__link:hover {
+  color: var(--cd-text);
+}
+.cd-topbar__link.is-active {
+  color: var(--cd-green-ink);
+  background: var(--cd-green);
+}
+
+/* Botão de salvos */
+.cd-topbar__saved {
+  position: relative;
+}
+.cd-topbar__counter {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  border-radius: 999px;
+  background: var(--cd-purple);
+  color: var(--cd-purple-ink);
+}
+
+@media (max-width: 760px) {
+  .cd-topbar__tag {
+    display: none;
+  }
+  .cd-topbar__link span {
+    display: none;
+  }
+  .cd-topbar__link {
+    padding: 9px 12px;
+  }
+  .cd-topbar__saved-text {
+    display: none;
+  }
+}

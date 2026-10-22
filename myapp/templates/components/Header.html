@@ -57,7 +57,7 @@
 
             <div class="signup-link">
               <p>Não tem conta?
-                <a href="{{url_for('signUpPage.SignUpPage')}}" class="sign-up-btn">Cadastre-se agora</a>
+                <a href="{{ safe_url_for('signUpPage.SignUpPage', fallback='/signUp') }}" class="sign-up-btn">Cadastre-se agora</a>
               </p>
             </div>
 
