@@ -419,6 +419,9 @@
   }
 }
 
+.cd-state[hidden] {
+  display: none;
+}
 .cd-state {
   display: flex;
   flex-direction: column;

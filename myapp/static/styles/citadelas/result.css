@@ -10,6 +10,17 @@
   gap: 28px;
 }
 
+/* Garante que o atributo `hidden` seja respeitado mesmo quando o
+   elemento tem display flex/grid/inline-flex definido por classe. */
+.cd-source[hidden],
+.cd-controls[hidden],
+.cd-tabs[hidden],
+.cd-grid[hidden],
+.cd-view[hidden],
+.cd-compare__charts[hidden] {
+  display: none !important;
+}
+
 /* ---------- Contexto do manuscrito ---------- */
 .cd-source {
   display: grid;
@@ -359,6 +370,141 @@
     border-top: 1px solid var(--cd-line-soft);
   }
   .cd-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   Abas: lista x comparativo
+   ============================================================ */
+.cd-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 5px;
+  background: var(--cd-bg-soft);
+  border: 1px solid var(--cd-line-soft);
+  border-radius: 999px;
+  align-self: flex-start;
+}
+.cd-tabs__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--cd-font);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 9px 18px;
+  border: none;
+  background: none;
+  color: var(--cd-text-dim);
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+.cd-tabs__btn:hover {
+  color: var(--cd-text);
+}
+.cd-tabs__btn.is-active {
+  color: var(--cd-green-ink);
+  background: var(--cd-green);
+}
+
+/* ============================================================
+   Comparativo
+   ============================================================ */
+.cd-compare__head {
+  margin-bottom: 20px;
+}
+.cd-compare__pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 26px;
+}
+.cd-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 320px;
+  padding: 9px 14px;
+  border: 1px solid var(--cd-line);
+  border-radius: 999px;
+  background: var(--cd-surface);
+  color: var(--cd-text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+.cd-pick:hover {
+  border-color: var(--cd-purple);
+  color: var(--cd-text);
+}
+.cd-pick.is-on {
+  border-color: var(--cd-purple);
+  color: var(--cd-text);
+  background: rgba(183, 156, 240, 0.12);
+}
+.cd-pick__dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--cd-line);
+}
+.cd-pick.is-on .cd-pick__dot {
+  /* a cor da série é definida inline pelo JS */
+}
+.cd-pick input {
+  display: none;
+}
+.cd-pick__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cd-compare__charts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+.cd-chart-card {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.cd-chart-card--wide {
+  grid-column: 1 / -1;
+}
+.cd-chart-card__title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--cd-text-muted);
+  margin: 0;
+}
+.cd-chart-card__title i {
+  color: var(--cd-green);
+}
+.cd-chart-card__canvas {
+  position: relative;
+  height: 300px;
+}
+.cd-chart-card--wide .cd-chart-card__canvas {
+  height: 260px;
+}
+
+@media (max-width: 820px) {
+  .cd-compare__charts {
     grid-template-columns: 1fr;
   }
 }

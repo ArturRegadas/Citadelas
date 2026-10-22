@@ -20,7 +20,13 @@
     source: {},
     items: [], // lista normalizada e plana
     filters: { femaleOnly: false, sort: "total" },
+    tab: "list", // "list" | "compare"
+    compareIds: [], // ids selecionados para comparar
   };
+
+  const COMPARE_MAX = 5;
+  // Paleta de séries (chapada, alternando lilás/verde e variações).
+  const SERIES_COLORS = ["#b79cf0", "#7fe3a3", "#8fb9f0", "#f0c56b", "#f08a9b"];
 
   /* ---------- Carregamento dos dados ---------- */
   function loadData() {
@@ -121,12 +127,18 @@
   function render() {
     const list = visible();
     const grid = $("cd-grid");
+    const hasItems = state.items.length > 0;
 
-    if (state.items.length === 0) {
-      $("cd-empty").hidden = false;
-      $("cd-source").hidden = true;
-      $("cd-controls").hidden = true;
+    // Fonte única de verdade sobre a visibilidade dos blocos.
+    $("cd-empty").hidden = hasItems;
+    $("cd-source").hidden = !hasItems;
+    $("cd-controls").hidden = !hasItems;
+    $("cd-tabs").hidden = !hasItems;
+
+    if (!hasItems) {
       grid.innerHTML = "";
+      $("cd-view-list").hidden = true;
+      $("cd-view-compare").hidden = true;
       return;
     }
 
@@ -391,28 +403,296 @@
     if (detail) return openDetail(detail.getAttribute("data-cd-detail"));
   }
 
+  /* ====================== ABAS (lista x comparativo) ====================== */
+  function setTab(tab) {
+    state.tab = tab;
+    $("cd-view-list").hidden = tab !== "list";
+    $("cd-view-compare").hidden = tab !== "compare";
+    ["list", "compare"].forEach((t) => {
+      const btn = $(`cd-tab-${t}`);
+      if (!btn) return;
+      const on = t === tab;
+      btn.classList.toggle("is-active", on);
+      btn.setAttribute("aria-selected", String(on));
+    });
+    if (tab === "compare") renderCompare();
+  }
+
+  /* ====================== COMPARATIVO (Chart.js) ====================== */
+  const charts = {}; // instâncias Chart.js por canvas id
+
+  function colorForId(id) {
+    const i = state.compareIds.indexOf(id);
+    return SERIES_COLORS[i % SERIES_COLORS.length];
+  }
+
+  function shortLabel(it) {
+    const t = it.title || "Sem título";
+    return t.length > 42 ? t.slice(0, 40) + "…" : t;
+  }
+
+  function renderPicker() {
+    const box = $("cd-compare-pick");
+    box.innerHTML = state.items
+      .map((it) => {
+        const on = state.compareIds.includes(it.id);
+        const dot = on ? `background:${colorForId(it.id)}` : "";
+        return `
+        <label class="cd-pick ${on ? "is-on" : ""}" title="${esc(it.title)}">
+          <input type="checkbox" data-cd-pick="${esc(it.id)}" ${on ? "checked" : ""} />
+          <span class="cd-pick__dot" style="${dot}"></span>
+          <span class="cd-pick__label">${esc(shortLabel(it))}</span>
+        </label>`;
+      })
+      .join("");
+  }
+
+  function selectedItems() {
+    // Mantém a ordem de seleção (define a cor das séries).
+    return state.compareIds
+      .map((id) => state.items.find((x) => x.id === id))
+      .filter(Boolean);
+  }
+
+  function togglePick(id) {
+    const i = state.compareIds.indexOf(id);
+    if (i > -1) {
+      state.compareIds.splice(i, 1);
+    } else {
+      if (state.compareIds.length >= COMPARE_MAX) {
+        Shared.toast(`Compare no máximo ${COMPARE_MAX} artigos.`, "error");
+        renderPicker();
+        return;
+      }
+      state.compareIds.push(id);
+    }
+    renderPicker();
+    renderCompare();
+  }
+
+  function destroyCharts() {
+    Object.keys(charts).forEach((k) => {
+      if (charts[k]) {
+        charts[k].destroy();
+        delete charts[k];
+      }
+    });
+  }
+
+  const GRID = "rgba(255,255,255,0.08)";
+  const TICK = "#8f87a8";
+
+  function baseScales(maxTo100) {
+    return {
+      r: undefined,
+      x: { grid: { color: GRID }, ticks: { color: TICK, font: { size: 11 } } },
+      y: {
+        beginAtZero: true,
+        suggestedMax: maxTo100 ? 100 : undefined,
+        grid: { color: GRID },
+        ticks: { color: TICK, font: { size: 11 } },
+      },
+    };
+  }
+
+  function legendOpts(show) {
+    return {
+      display: show,
+      labels: { color: "#c6bedd", font: { size: 11 }, usePointStyle: true },
+    };
+  }
+
+  function renderCompare() {
+    renderPicker();
+    const sel = selectedItems();
+    const empty = sel.length === 0;
+    $("cd-compare-empty").hidden = !empty;
+    $("cd-compare-charts").hidden = empty;
+    destroyCharts();
+    if (empty) return;
+
+    const labels = sel.map(shortLabel);
+    const colors = sel.map((it) => colorForId(it.id));
+
+    // 1) Radar: perfil das 5 dimensões de pontuação.
+    const dims = [
+      "Similaridade",
+      "Importância",
+      "Relevância",
+      "Atualidade",
+      "Autoria fem.",
+    ];
+    charts.radar = new Chart($("cd-chart-radar"), {
+      type: "radar",
+      data: {
+        labels: dims,
+        datasets: sel.map((it) => {
+          const c = colorForId(it.id);
+          return {
+            label: shortLabel(it),
+            data: [
+              it.score.similarity,
+              it.score.importance,
+              it.score.relevance,
+              it.score.present,
+              it.gender.female,
+            ],
+            borderColor: c,
+            backgroundColor: c + "33",
+            pointBackgroundColor: c,
+            borderWidth: 2,
+          };
+        }),
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: legendOpts(true) },
+        scales: {
+          r: {
+            min: 0,
+            max: 100,
+            grid: { color: GRID },
+            angleLines: { color: GRID },
+            pointLabels: { color: "#c6bedd", font: { size: 11 } },
+            ticks: {
+              color: TICK,
+              backdropColor: "transparent",
+              font: { size: 9 },
+            },
+          },
+        },
+      },
+    });
+
+    // 2) Barra: pontuação final.
+    charts.total = new Chart($("cd-chart-total"), {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Pontuação final",
+            data: sel.map((it) => Math.round(it.score.total)),
+            backgroundColor: colors,
+            borderRadius: 6,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: legendOpts(false) },
+        scales: baseScales(true),
+      },
+    });
+
+    // 3) Barra empilhada: composição de autoria (fem/masc/indef).
+    charts.gender = new Chart($("cd-chart-gender"), {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Feminino",
+            data: sel.map((it) => it.gender.female),
+            backgroundColor: "#b79cf0",
+            borderRadius: 4,
+          },
+          {
+            label: "Masculino",
+            data: sel.map((it) => it.gender.male),
+            backgroundColor: "#7fe3a3",
+            borderRadius: 4,
+          },
+          {
+            label: "Indefinido",
+            data: sel.map((it) => it.gender.unknown),
+            backgroundColor: "#4a4360",
+            borderRadius: 4,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: legendOpts(true) },
+        scales: {
+          x: {
+            stacked: true,
+            grid: { color: GRID },
+            ticks: { color: TICK, font: { size: 11 } },
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            suggestedMax: 100,
+            grid: { color: GRID },
+            ticks: { color: TICK, font: { size: 11 } },
+          },
+        },
+      },
+    });
+
+    // 4) Barra horizontal: citações recebidas.
+    charts.citations = new Chart($("cd-chart-citations"), {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Citações",
+            data: sel.map((it) => it.citations),
+            backgroundColor: colors,
+            borderRadius: 6,
+          },
+        ],
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: legendOpts(false) },
+        scales: baseScales(false),
+      },
+    });
+  }
+
   /* ---------- Init ---------- */
   document.addEventListener("DOMContentLoaded", () => {
     const data = loadData();
     state.source = (data && data.source) || {};
     state.items = flatten(data && data.recommendations);
 
-    // Cabeçalho da pesquisa
+    // Preenche o texto do cabeçalho; a visibilidade é decidida em render().
     if (state.items.length > 0) {
-      $("cd-source").hidden = false;
-      $("cd-controls").hidden = false;
-      $("cd-empty").hidden = true;
       $("cd-source-title").textContent =
         state.source.title || "Manuscrito analisado";
       $("cd-source-summary").textContent = state.source.summary || "";
       $("cd-source-area").textContent = state.source.research_area || "—";
       $("cd-source-count").textContent = String(state.items.length);
+      // Pré-seleciona os primeiros artigos (já ordenados por pontuação) para comparar.
+      state.compareIds = visible()
+        .slice(0, Math.min(3, COMPARE_MAX))
+        .map((it) => it.id);
     }
 
     render();
 
     $("cd-grid").addEventListener("click", onGridClick);
     $("cd-detail-body").addEventListener("click", onGridClick);
+
+    // Abas
+    $("cd-tabs").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-cd-tab]");
+      if (btn) setTab(btn.getAttribute("data-cd-tab"));
+    });
+
+    // Seleção de artigos para comparar
+    $("cd-compare-pick").addEventListener("change", (e) => {
+      const chk = e.target.closest("[data-cd-pick]");
+      if (chk) togglePick(chk.getAttribute("data-cd-pick"));
+    });
 
     $("cd-sort").addEventListener("change", (e) => {
       state.filters.sort = e.target.value;
