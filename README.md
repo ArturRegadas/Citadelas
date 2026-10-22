@@ -64,6 +64,7 @@ Consulte o arquivo `.agents/skills/hackathon-system-guide/SKILL.md` ou `GEMINI.m
 ---
 
 # Hackathon 2026 — CitaDelas: Análise e Recomendação de Referências Científicas de Autoria Feminina
+<img width="825" height="291" alt="citadelas logo recortada" src="https://github.com/user-attachments/assets/5ddf6155-3bf1-4349-af35-128b52c9bcb7" />
 
 ## 1. Sobre o projeto
 
