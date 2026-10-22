@@ -96,86 +96,63 @@
           <button type="button" id="cd-tab-file" class="cd-toggle__btn is-active" role="tab" aria-selected="true" aria-controls="cd-panel-file" onclick="CitaDelasRecommend.setMode('file')">
             <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i> Enviar arquivo
           </button>
-          <button type="button" id="cd-tab-manual" class="cd-toggle__btn" role="tab" aria-selected="false" aria-controls="cd-panel-manual" onclick="CitaDelasRecommend.setMode('manual')">
-            <i class="fa-solid fa-keyboard" aria-hidden="true"></i> Preencher manualmente
-          </button>
         </div>
       </div>
 
       <hr class="cd-rule" />
 
-      <form id="cd-form" novalidate>
-        <!-- MODO ARQUIVO -->
-        <div id="cd-panel-file" class="cd-form__panel" role="tabpanel" aria-labelledby="cd-tab-file">
-          <div class="cd-field">
-            <label class="cd-label" for="cd-file-input">Artigo em PDF ou TXT <span class="cd-req">*</span></label>
-            <button type="button" id="cd-dropzone" class="cd-dropzone" aria-describedby="cd-dropzone-hint">
-              <input type="file" id="cd-file-input" accept=".pdf,.txt" class="cd-sr-only" />
-              <span class="cd-dropzone__icon" aria-hidden="true"><i class="fa-solid fa-cloud-arrow-up"></i></span>
-              <span class="cd-dropzone__text">
-                <strong>Clique para selecionar</strong> ou arraste o arquivo aqui
-              </span>
-              <span class="cd-dropzone__hint" id="cd-dropzone-hint">PDF ou TXT · até 15 MB · os dados são extraídos automaticamente</span>
-            </button>
+      <form id="cd-form" method="POST" action="/pdf/page"
+      enctype="multipart/form-data" novalidate>
 
-            <div id="cd-file-info" class="cd-file-chip" hidden>
-              <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i>
-              <span id="cd-file-name" class="cd-truncate">arquivo.pdf</span>
-              <button type="button" class="cd-file-chip__remove" onclick="CitaDelasRecommend.clearFile()" aria-label="Remover arquivo selecionado">
-                <i class="fa-solid fa-xmark"></i>
-              </button>
-            </div>
-          </div>
-        </div>
+        <div id="cd-panel-file" class="cd-form__panel"
+            role="tabpanel" aria-labelledby="cd-tab-file">
 
-        <!-- MODO MANUAL -->
-        <div id="cd-panel-manual" class="cd-form__panel" role="tabpanel" aria-labelledby="cd-tab-manual" hidden>
-          <div class="cd-grid-2">
-            <div class="cd-field cd-span-2">
-              <label class="cd-label" for="cd-input-title">Título do artigo ou projeto <span class="cd-req">*</span></label>
-              <input id="cd-input-title" class="cd-input" type="text" placeholder="Ex.: Viés de gênero em modelos de linguagem aplicados à saúde" />
-            </div>
             <div class="cd-field">
-              <label class="cd-label" for="cd-input-area">Grande área</label>
-              <select id="cd-input-area" class="cd-select">
-                <option value="Computação">Computação e IA</option>
-                <option value="Saúde">Ciências da Saúde</option>
-                <option value="Biotecnologia">Biotecnologia e Engenharia</option>
-                <option value="Humanas">Ciências Sociais e Humanas</option>
-                <option value="Exatas">Física, Química e Exatas</option>
-                <option value="Educacao">Educação</option>
-              </select>
-            </div>
-          </div>
+                <label class="cd-label" for="cd-file-input">
+                    Artigo em PDF ou TXT <span class="cd-req">*</span>
+                </label>
 
-          <div class="cd-field">
-            <div class="cd-field__row">
-              <label class="cd-label" for="cd-input-abstract">Resumo / contexto teórico</label>
-              <span class="cd-counter" id="cd-char-counter">0 / 2000</span>
-            </div>
-            <textarea id="cd-input-abstract" class="cd-textarea" rows="5" maxlength="2000"
-              placeholder="Cole o resumo do trabalho. Usamos esse texto para mapear os conceitos centrais e procurar autoras com pesquisas aderentes."></textarea>
-          </div>
+                <button type="button" id="cd-dropzone" class="cd-dropzone">
+                    <input
+                        type="file"
+                        id="cd-file-input"
+                        name="pdf_file"
+                        accept=".pdf,.txt"
+                        class="cd-sr-only"
+                        required
+                    />
 
-          <div class="cd-field">
-            <label class="cd-label" for="cd-input-tag">Palavras-chave <span class="cd-tip">(Enter para adicionar)</span></label>
-            <div class="cd-tagbox" id="cd-tagbox">
-              <span id="cd-tags" class="cd-tags"></span>
-              <input id="cd-input-tag" class="cd-tagbox__input" type="text" placeholder="Digite e pressione Enter…" />
+                    <span class="cd-dropzone__icon" aria-hidden="true">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </span>
+
+                    <span class="cd-dropzone__text">
+                        <strong>Clique para selecionar</strong>
+                        ou arraste o arquivo aqui
+                    </span>
+
+                    <span class="cd-dropzone__hint">
+                        PDF ou TXT · até 15 MB
+                    </span>
+                </button>
             </div>
-          </div>
         </div>
 
         <hr class="cd-rule" />
 
         <div class="cd-form__foot">
-          <p class="cd-form__note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> A estimativa de gênero é probabilística e não confirma a identidade das autoras.</p>
-          <button id="cd-analyze" type="submit" class="cd-btn cd-btn--primary">
-            <i class="fa-solid fa-book-open" aria-hidden="true"></i>
-            <span id="cd-analyze-label">Analisar e recomendar</span>
-          </button>
+            <p class="cd-form__note">
+                A estimativa de gênero é probabilística e não confirma
+                a identidade das autoras.
+            </p>
+
+            <button id="cd-analyze" type="submit"
+                    class="cd-btn cd-btn--primary">
+                <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+                <span id="cd-analyze-label">Analisar e recomendar</span>
+            </button>
         </div>
-      </form>
+    </form>
     </section>
 
     </div><!-- /view analisar -->

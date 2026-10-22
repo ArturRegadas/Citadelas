@@ -16,6 +16,7 @@ def analyze_article(article: str) -> ArticleContextSchema:
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
             response_schema=ArticleContextSchema,
+            max_output_tokens = 8192,
             temperature=0.2,
         )
     )
@@ -129,15 +130,6 @@ def analyze_article(article: str) -> ArticleContextSchema:
 ... (94 linhas)"""
 
 
-def convert_to_text(article: dict) -> str:
-    """
-    Converte um artigo representado como dicionário em uma string de texto.
-    """
-    text = f"Título: {article.get('titulo', '')}\n"
-    text += f"topicos: {" ".join(article.get('topicos_origem', []))}\n"
-    text += f"Resumo: {article.get('resumo', '')}\n\n"
-
-    return text.strip()
 
 def article_importance(article_a, article_b):
     client = genai.Client(api_key=Config.GEMINI_API_KEY)
@@ -146,12 +138,13 @@ def article_importance(article_a, article_b):
         model=Config.GEMINI_MODEL,
         contents=[
             IMPORTANCE_ANALYSIS_PROMPT,
-            f"segue o artigo original:\n\n{article_a}\n\nsegue o artigo candidato:\n\n{convert_to_text(article_b)}"
+            f"segue o artigo original:\n\n{article_a}\n\nsegue o artigo candidato:\n\n{article_b}"
         ],
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
             response_schema=ImportanceAnalysisSchema,
-            temperature=0.2,
+            max_output_tokens= 8192,
+            temperature=0.2
         )
     )
 

@@ -13,12 +13,15 @@ from myapp.services.OpenAlex import AlexService
 WEIGHTS = {
     "title": 0.20,
     "abstract": 0.45,
-    "keywords": 0.35,
+    "keywords": 0.35
+}
+
+GERAL_WEIGHTS = {
     "similarity": 0.00,
     "importance": 0.00,
     "relevance": 0.00,
-    "reliability": 0.00,
-    "genre_compose": 0.00,
+    "present": 0.00,
+    "genre_compose": 0.00
 }
 
 # Weight of each comparison method.
@@ -102,21 +105,29 @@ def compare_field(text_a, text_b):
 
 
 def calculate_article_similarity(article_a, article_b) -> float:
+    kww = article_a.get("topics", [])
+    kw = []
+    for i in kww:
+        for j in i["key_words"]:
+            kw.append(j)
     article_a = {
         "title": article_a.get("title", ""),
         "abstract": (
             article_a.get("summary", "")
         ),
-        "keywords": [keyword for topic in article_a.get("topics", []) if topic for keyword in topic.get("keywords", [])]
+        "keywords": kw
     }
 
     article_b = {
         "title": article_b.get("title", ""),
         "abstract": (
-            article_b.get("summary", "")
+            article_b.get("abstract", "")
         ),
-        "keywords": [keyword for topic in article_b.get("topics", []) if topic for keyword in topic.get("keywords", [])]
+        "keywords": [i for i in article_b.get("keywords", [])]
     }
+
+    #print(article_a,"\n\n" ,article_b, "\n\n\n\n")
+
     scores = {}
     weighted_total = 0.0
     total_weight = 0.0
@@ -147,9 +158,24 @@ def calculate_article_similarity(article_a, article_b) -> float:
         "field_scores": scores,
     }
 
-# H e base
-def calculate_article_importance(article_a, article_b) -> Dict[str, Any]:
-    return article_importance(article_a.get("all_content", ""), article_b)
+
+def convert_to_text(article) -> str:
+    """
+    Converte um artigo representado como dicionário em uma string de texto.
+    """
+    title = article.get("title") or ""
+    keywords = article.get("keywords") or []
+    abstract = article.get("abstract") or ""
+
+    text = f"Título: {title}\n"
+    text += f"Palavras-chave: {' '.join(keywords)}\n"
+    text += f"Resumo: {abstract}\n"
+
+    return text
+
+
+def calculate_article_importance(article_a:str, article_b:Dict[str, Any]) -> Dict[str, Any]:
+    return article_importance(article_a, convert_to_text(article_b))
 """
 {
   "score": 0,
@@ -189,7 +215,6 @@ def calculate_article_present(article_b, h:int):
 
     return score
 
-    pass
 
 # base = med de citações da area do artigo
 def calculate_article_relevance(article_b, base=5):
@@ -207,9 +232,9 @@ def calculate_article_relevance(article_b, base=5):
 
 # h -> meia-vida da área do artigo, em anos
 def calculate_article_present(article_b, h: int =10):
-    current_year = datetime.now().year
+    current_year = datetime.date.today().year
 
-    publication_year = article_b["publication_year"]
+    publication_year = article_b["year"]
     age = max(0, current_year - publication_year)
 
     score = 100 * (2 ** (-age / h))
@@ -221,15 +246,15 @@ def calculate_article_present(article_b, h: int =10):
 
 # % de mulheres entre os autores do artigo
 def calculate_article_genre_compose(article_b):
-    return article_b.get("candidatos", {}).get("genero", {}).get("female_percentage", 0)
+    return article_b.get("genero", {}).get("female_percentage", 0)
 
 
-def calculate_score(article_a, article_b) -> Dict[str, Any]:
+def calculate_score(article_a_text, article_a_data, article_b) -> Dict[str, Any]:
     similarity_result = calculate_article_similarity(
-        article_a, article_b
+        article_a_data, article_b
     )
     importance_result_data = calculate_article_importance(
-        article_a, article_b
+        article_a_text, article_b
     )
 
     importance_result = importance_result_data.get("importance_value", 0)
@@ -251,36 +276,48 @@ def calculate_score(article_a, article_b) -> Dict[str, Any]:
         "relevance": relevance_result,
         "genre_compose": genre_compose_result,
         "total":
-            similarity_result*WEIGHTS["similarity"] +
-            importance_result*WEIGHTS["importance"] +
-            present_result*WEIGHTS["present"] +
-            relevance_result*WEIGHTS["relevance"] +
-            genre_compose_result*WEIGHTS["genre_compose"],
+            similarity_result*GERAL_WEIGHTS["similarity"] +
+            importance_result*GERAL_WEIGHTS["importance"] +
+            present_result*GERAL_WEIGHTS["present"] +
+            relevance_result*GERAL_WEIGHTS["relevance"] +
+            genre_compose_result*GERAL_WEIGHTS["genre_compose"],
         "correction": importance_result_data
     }
 
 
-def calculate_articles_scores(article_a):
+## articlea[all_context, article_analysis]
+def calculate_articles_scores(article_a, limit = 5, offset = 0):
     results = []
 
-    article_text = article_a.get("all_content", "")
+    article_a_text = article_a.get("all_content", "")
+    article_a_data = article_a.get("article_analysis", {})
 
     articles = alexService.filtrar_autoria_feminina(
-        resultado = alexService.buscar(article_text, estimar_genero=True),
+        resultado = alexService.buscar(entrada = article_a_data, estimar_genero=True),
         limite_percentual=25,
         country_id="BR",
         fallback_qtd=5
     )
 
     ans = []
+    cnt = 0
+    from pydantic import BaseModel
+    if isinstance(article_a_data, BaseModel):
+        article_a_data = article_a_data.model_dump()
     for article_b in articles.get("candidatos", []):
-        data = calculate_score(article_a, article_b)
+        if(cnt < offset):
+            cnt += 1
+            continue
+        if(cnt >= limit + offset):
+            break
+        data = calculate_score(article_a_text, article_a_data, article_b)
         ans.append({
             "article":{
                 "article_data": article_b,
                 "score_data": data
             }
         })
+        cnt += 1
         
 
     return results
