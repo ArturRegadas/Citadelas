@@ -2,6 +2,20 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <script>
+    // Anti-flash: aplica o tema salvo antes de renderizar o CSS.
+    (function () {
+      try {
+        var t = localStorage.getItem("citadelas:theme");
+        if (t !== "light" && t !== "dark") {
+          t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark";
+        }
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CitaDelas — Recomendações</title>
 
@@ -11,10 +25,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/theme.css') }}?v=20261022d" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-topbar.css') }}?v=20261022d" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-drawer.css') }}?v=20261022d" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/result.css') }}?v=20261022d" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/theme.css') }}?v=20261022123327d" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-topbar.css') }}?v=20261022123327d" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/components/citadelas-drawer.css') }}?v=20261022123327d" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/citadelas/result.css') }}?v=20261022123327d" />
 </head>
 <body class="cd-body">
 
@@ -148,7 +162,7 @@
     {% if recommendations is defined %}{{ {"source": source, "recommendations": recommendations} | tojson }}{% else %}null{% endif %}
   </script>
 
-  <script src="{{ url_for('static', filename='js/components/CitaDelasShared.js') }}?v=20261022d"></script>
-  <script src="{{ url_for('static', filename='js/mains/CitaDelasResult.js') }}?v=20261022d"></script>
+  <script src="{{ url_for('static', filename='js/components/CitaDelasShared.js') }}?v=20261022123327d"></script>
+  <script src="{{ url_for('static', filename='js/mains/CitaDelasResult.js') }}?v=20261022123327d"></script>
 </body>
 </html>

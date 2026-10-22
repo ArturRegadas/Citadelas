@@ -48,6 +48,46 @@
 
   --cd-font: "Sora", "Inter", system-ui, sans-serif;
   --cd-serif: "Fraunces", "Merriweather", Georgia, serif;
+
+  /* transição suave ao trocar de tema */
+  --cd-theme-transition: background-color .25s ease, color .25s ease, border-color .25s ease;
+}
+
+/* ============================================================
+   TEMA CLARO — ativado por <html data-theme="light">.
+   Sobrescreve apenas as variáveis de cor; os acentos verde/lilás
+   são escurecidos para manter contraste em fundo claro.
+   ============================================================ */
+html[data-theme="light"] {
+  /* Fundos claros (creme/branco, chapado) */
+  --cd-bg: #f6f4fb;
+  --cd-bg-soft: #efecf7;
+  --cd-surface: #ffffff;
+  --cd-surface-2: #f4f1fb;
+  --cd-surface-3: #ece7f6;
+  --cd-line: #ddd6ec;
+  --cd-line-soft: #e7e2f1;
+
+  /* Texto escuro */
+  --cd-text: #1c1630;
+  --cd-text-muted: #514a66;
+  --cd-text-dim: #857d99;
+
+  /* Acentos: tons mais fechados para contrastar com fundo claro */
+  --cd-green: #1f9d5e;        /* verde-menta escurecido */
+  --cd-green-ink: #ffffff;    /* texto sobre verde */
+  --cd-purple: #7b4fd1;       /* lilás escurecido */
+  --cd-purple-ink: #ffffff;   /* texto sobre lilás */
+
+  /* Semânticos escurecidos */
+  --cd-ok: #1f9d5e;
+  --cd-warn: #b9820f;
+  --cd-err: #c84961;
+  --cd-info: #3a6fc0;
+
+  /* Sombras mais suaves para fundo claro */
+  --cd-shadow: 0 10px 30px rgba(28, 22, 48, 0.12);
+  --cd-shadow-sm: 0 4px 14px rgba(28, 22, 48, 0.10);
 }
 
 * {
@@ -65,6 +105,17 @@
   background-color: var(--cd-bg);
   -webkit-font-smoothing: antialiased;
   line-height: 1.5;
+  transition: var(--cd-theme-transition);
+}
+
+/* Informa ao navegador o esquema para controles nativos (scrollbar, etc.) */
+html { color-scheme: dark; }
+html[data-theme="light"] { color-scheme: light; }
+
+/* Cards, superfícies e bordas acompanham a troca de tema suavemente */
+.cd-card, .cd-topbar, .cd-subnav, .cd-btn, .cd-input, .cd-select, .cd-textarea,
+.cd-badge, .cd-chip, .cd-drawer__panel, .cd-metric, .cd-rec, .cd-paper {
+  transition: var(--cd-theme-transition);
 }
 
 .cd-serif {

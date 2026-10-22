@@ -1,13 +1,45 @@
+import time
 from google import genai
 from google.genai import types
 
 from myapp.utils.gemini.GeminiPrompt import ARTICLE_ANALYSIS_PROMPT, IMPORTANCE_ANALYSIS_PROMPT
 from myapp.utils.gemini.GeminiSchema import ArticleContextSchema, ImportanceAnalysisSchema
 from myapp.config import Config
+
+
+# ------------------------------------------------------------
+# Resiliência: o Gemini às vezes responde 503 (sobrecarregado) ou
+# "model is overloaded". São erros transitórios do lado do Google.
+# Tentamos de novo com espera crescente antes de desistir.
+# NÃO altera prompt nem schema — apenas re-executa a chamada.
+# ------------------------------------------------------------
+_RETRYABLE_MARKERS = ("503", "overloaded", "unavailable", "500", "deadline", "timeout")
+
+
+def _is_retryable(erro: Exception) -> bool:
+    texto = str(erro).lower()
+    return any(m in texto for m in _RETRYABLE_MARKERS)
+
+
+def _generate_with_retry(call, tentativas: int = 4):
+    """Executa `call()` com retry/backoff para erros transitórios do Gemini."""
+    ultimo_erro = None
+    for i in range(tentativas):
+        try:
+            return call()
+        except Exception as erro:
+            ultimo_erro = erro
+            if not _is_retryable(erro) or i == tentativas - 1:
+                raise
+            # backoff: 1s, 2s, 4s...
+            time.sleep(2 ** i)
+    raise ultimo_erro
+
+
 def analyze_article(article: str) -> ArticleContextSchema:
     client = genai.Client(api_key=Config.GEMINI_API_KEY)
 
-    response = client.models.generate_content(
+    response = _generate_with_retry(lambda: client.models.generate_content(
         model=Config.GEMINI_MODEL,
         contents=[
             ARTICLE_ANALYSIS_PROMPT,
@@ -19,7 +51,7 @@ def analyze_article(article: str) -> ArticleContextSchema:
             max_output_tokens = 8192,
             temperature=0.2,
         )
-    )
+    ))
 
     if not response.text:
         raise ValueError("Gemini retornou uma resposta vazia.")
@@ -134,7 +166,7 @@ def analyze_article(article: str) -> ArticleContextSchema:
 def article_importance(article_a, article_b):
     client = genai.Client(api_key=Config.GEMINI_API_KEY)
     
-    response = client.models.generate_content(
+    response = _generate_with_retry(lambda: client.models.generate_content(
         model=Config.GEMINI_MODEL,
         contents=[
             IMPORTANCE_ANALYSIS_PROMPT,
@@ -146,7 +178,7 @@ def article_importance(article_a, article_b):
             max_output_tokens= 8192,
             temperature=0.2
         )
-    )
+    ))
 
     if not response.text:
         raise ValueError("Gemini retornou uma resposta vazia.")

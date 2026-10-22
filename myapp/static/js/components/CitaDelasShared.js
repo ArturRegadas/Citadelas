@@ -154,9 +154,51 @@
     if (e.key === "Escape") closeDrawer();
   }
 
+  /* ---------- Tema claro/escuro ---------- */
+  const THEME_KEY = "citadelas:theme";
+
+  function _resolveInitialTheme() {
+    try {
+      const saved = localStorage.getItem(THEME_KEY);
+      if (saved === "light" || saved === "dark") return saved;
+    } catch (e) { /* storage indisponível */ }
+    // Respeita a preferência do sistema na primeira visita.
+    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) {
+      return "light";
+    }
+    return "dark";
+  }
+
+  function _syncThemeButton(theme) {
+    const btn = document.getElementById("cd-theme-toggle");
+    if (!btn) return;
+    const icon = btn.querySelector("i");
+    if (icon) {
+      // Mostra o ícone do que será ativado ao clicar.
+      icon.className = theme === "light" ? "fa-solid fa-moon" : "fa-solid fa-sun";
+    }
+    btn.setAttribute("aria-label", theme === "light" ? "Ativar tema escuro" : "Ativar tema claro");
+  }
+
+  function applyTheme(theme) {
+    const t = theme === "light" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", t);
+    try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
+    _syncThemeButton(t);
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute("data-theme") || "dark";
+    applyTheme(current === "light" ? "dark" : "light");
+  }
+
+  // Aplica o tema o quanto antes (evita "flash" do tema errado).
+  applyTheme(_resolveInitialTheme());
+
   /* ---------- Bind global ---------- */
   document.addEventListener("DOMContentLoaded", () => {
     syncCounter();
+    _syncThemeButton(document.documentElement.getAttribute("data-theme") || "dark");
 
     const drawer = document.getElementById("cd-saved-drawer");
     if (drawer) {
@@ -180,5 +222,7 @@
     removeSaved,
     toggleSaved,
     toggleSavedDrawer,
+    toggleTheme,
+    applyTheme,
   };
 })();
