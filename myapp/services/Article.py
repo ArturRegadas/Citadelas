@@ -110,8 +110,12 @@ def _combine_field_scores(
         total_weight += weight
 
     raw_score = weighted_total / total_weight * 100 if total_weight else 0.0
+    total_score = round(expand_score(raw_score), 2)
+    if field_scores["title"] == 100 or field_scores["abstract"] == 100:
+        total_score = 100.00
+
     return {
-        "similarity": round(expand_score(raw_score), 2),
+        "similarity": total_score,
         "field_scores": field_scores,
     }
 
