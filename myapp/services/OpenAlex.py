@@ -262,6 +262,9 @@ class AlexService:
         com_genero = []   # artigos com estimativa disponível (passando ou não)
         aprovados = []    # artigos acima do limite
 
+        lim_gen_c = 0
+        lim_gen = 50
+
         for artigo in candidatos:
             genero = artigo.get("genero")
 
@@ -279,6 +282,10 @@ class AlexService:
                         genero = analyze_authors(autores, country_id=country_id)
                         genero["disponivel"] = True
                         artigo["genero"] = genero
+                        lim_gen_c += len(autores)
+                        #attention
+                        if lim_gen_c >= lim_gen:
+                            break
                     except Exception:
                         continue  # sem estimativa confiável: ignora o artigo
                 else:

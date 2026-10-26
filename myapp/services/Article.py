@@ -18,10 +18,10 @@ WEIGHTS = {
 
 GERAL_WEIGHTS = {
     "similarity": 0.40,
-    "importance": 0.55,
-    "relevance": 0.25,
-    "present": 0.05,
-    "genre_compose": 0.05
+    "importance": 0.35,
+    "relevance": 0.10,
+    "genre_compose": 0.10,
+    "present": 0.05
 }
 
 # Weight of each comparison method.
@@ -42,7 +42,7 @@ def expand_score(score):
     """
     score = score / 100
 
-    expanded_score = score ** 0.45
+    expanded_score = score ** 0.4 # menor + logaritmco
 
     return expanded_score * 100
 
@@ -231,7 +231,7 @@ def calculate_article_relevance(article_b, base=5):
 
 
 # h -> meia-vida da área do artigo, em anos
-def calculate_article_present(article_b, h: int =10):
+def calculate_article_present(article_b, h: int =15):
     current_year = datetime.date.today().year
 
     publication_year = article_b.get("year")
@@ -304,7 +304,7 @@ def calculate_score(article_a_text, article_a_data, article_b) -> Dict[str, Any]
 
 
 ## articlea[all_content, article_analysis]
-def calculate_articles_scores(article_a, limit = 5, offset = 0):
+def calculate_articles_scores(article_a, limit = 10, offset = 0):
     article_a_text = article_a.get("all_content", "")
     article_a_data = article_a.get("article_analysis", {})
 
@@ -312,14 +312,17 @@ def calculate_articles_scores(article_a, limit = 5, offset = 0):
         entrada=article_a_data,
         limite_percentual=25,
         country_id="BR",
-        fallback_qtd=5,
+        fallback_qtd=limit+offset,
     )
+    
 
-    ans = []
-    cnt = 0
     from pydantic import BaseModel
     if isinstance(article_a_data, BaseModel):
         article_a_data = article_a_data.model_dump()
+
+
+    ans = []
+    cnt = 0
     for article_b in articles.get("candidatos", []):
         if(cnt < offset):
             cnt += 1

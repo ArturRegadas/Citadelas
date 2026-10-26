@@ -106,19 +106,24 @@ class CitationLocationSchema(BaseModel):
 
 class ImportanceAnalysisSchema(BaseModel):
     importance_score: float = Field(
-        description="Pontuação final de importância do artigo, de 0 a 100.",
-        ge=0,
-        le=100
+        description=(
+            "Pontuação final de importância do artigo, de 0 a 100. "
+            "O valor deve estar entre 0 e 100."
+        )
     )
 
     h: float = Field(
-        description="Meia-vida da área científica do artigo, em anos.",
-        gt=0
+        description=(
+            "Meia-vida da área científica do artigo, em anos. "
+            "O valor deve ser maior que 0."
+        )
     )
 
     base: float = Field(
-        description="Média de citações de artigos da mesma área.",
-        ge=0
+        description=(
+            "Média de citações de artigos da mesma área. "
+            "O valor deve ser maior ou igual a 0."
+        )
     )
 
     justification: str = Field(

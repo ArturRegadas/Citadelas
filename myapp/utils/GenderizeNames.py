@@ -54,6 +54,8 @@ def genderize_name(name: str, country_id: Optional[str] = "BR") -> Dict[str, Any
     }
 
 
+
+
 def genderize_names(
     names: List[str], country_id: Optional[str] = "BR"
 ) -> List[Dict[str, Any]]:
@@ -131,3 +133,4 @@ genderize_name_async = make_async(genderize_name)
 genderize_names_async = make_async(genderize_names)
 female_authorship_share_async = make_async(female_authorship_share)
 analyze_authors_async = make_async(analyze_authors)
+
