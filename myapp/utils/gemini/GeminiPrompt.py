@@ -155,6 +155,7 @@ Não altere o texto original. A recomendação indica onde uma citação pode se
 Retorne exclusivamente um objeto JSON válido, sem Markdown ou comentários externos, seguindo esta estrutura:
 
 {
+  "similarity": similaridade entre os dois artigos, de 0 a 100, (titulo, abstract e tópicos)
   "score": 0,
   "h": meia-vida da área do artigo, em anos,
   "base": media de citações da area do artigo,

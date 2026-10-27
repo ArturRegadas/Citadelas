@@ -105,6 +105,12 @@ class CitationLocationSchema(BaseModel):
 
 
 class ImportanceAnalysisSchema(BaseModel):
+    similarity: float = Field(
+        description=(
+            "Pontuação final de similaridade entre os artigos, de 0 a 100. "
+            "O valor deve estar entre 0 e 100."
+        )
+    )
     importance_score: float = Field(
         description=(
             "Pontuação final de importância do artigo, de 0 a 100. "

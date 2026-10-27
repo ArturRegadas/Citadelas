@@ -441,7 +441,7 @@ class AlexService:
 
         lim_gen_c = 0
 
-        lim_gen = 100
+        lim_gen = 35
 
         for artigo in candidatos:
 
