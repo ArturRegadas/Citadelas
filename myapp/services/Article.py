@@ -26,7 +26,9 @@ GERAL_WEIGHTS = {
 }
 
 SEMANTIC_WEIGHT = 0.80
+
 LEXICAL_WEIGHT = 0.20
+
 MAX_GEMINI_WORKERS = 4
 
 model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
@@ -133,7 +135,6 @@ def calculate_article_similarity(article_a, article_b) -> Dict[str, Any]:
         texts = []
         for field in fields_to_compare:
             texts.extend([source_fields[field], candidate_fields[field]])
-
         # One model call instead of one model call per field.
         embeddings = model.encode(
             texts,
