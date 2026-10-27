@@ -13,13 +13,13 @@ from myapp.services.OpenAlex import AlexService
 
 WEIGHTS = {
     "title": 0.20,
-    "abstract": 0.45,
-    "keywords": 0.35,
+    "abstract": 0.60,
+    "keywords": 0.20,
 }
 
 GERAL_WEIGHTS = {
-    "similarity": 0.45,
-    "importance": 0.45,
+    "similarity": 0.40,
+    "importance": 0.50,
     "relevance": 0.10,
     "genre_compose": 0.10,
     "present": 0.05,
@@ -111,8 +111,6 @@ def _combine_field_scores(
 
     raw_score = weighted_total / total_weight * 100 if total_weight else 0.0
     total_score = round(expand_score(raw_score), 2)
-    if field_scores["title"] == 100 or field_scores["abstract"] == 100:
-        total_score = 100.00
 
     return {
         "similarity": total_score,
