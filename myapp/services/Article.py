@@ -104,7 +104,7 @@ def calculate_article_genre_compose(
         or 0
     )
 
-    return max(0.0, min(100.0, float(value)))
+    return float(value)
 
 
 def _importance_result(
@@ -147,15 +147,14 @@ def _compose_score(
         importance_result_data.get("similarity", 0) or 0
     )
 
-    importance_value = float(
+    importance_value = (
         importance_result_data.get("importance_score", 0)
         or importance_result_data.get("score", 0)
         or 0
     )
-
     # Mantém os valores dentro do intervalo esperado.
-    similarity_value = max(0.0, min(100.0, similarity_value))
-    importance_value = max(0.0, min(100.0, importance_value))
+    similarity_value
+    importance_value
 
     present_result = calculate_article_present(article_b, h=5)
     relevance_result = calculate_article_relevance(
